@@ -297,7 +297,8 @@ function getThere(l, b, g) {
   li += AFF.flights
     ? `<li>🔎 ${affA(AFF.flights.replace("{IATA}", c0), esc(x.flights(`${city} (${c0})`)), l)}</li>`
     : `<li>🔎 <a href="https://www.google.com/travel/flights?q=${encodeURIComponent("Flights to " + c0)}" rel="nofollow noopener" target="_blank">${esc(x.flights(`${city} (${c0})`))}</a></li>`;
-  if (AFF.airhelp) li += `<li>⏱️ ${affA(AFF.airhelp, esc(x.delay), l)}</li>`;
+  if (AFF.car) li += `<li>🚗 ${affA(AFF.car, esc(x.car(city)), l)}</li>`;
+  if (AFF.claim) li += `<li>⏱️ ${affA(AFF.claim, esc(x.delay.replaceAll("AirHelp", AFF.claimName)), l)}</li>`;
   li += `<li>📄 <a href="${P(l)}/flight-delay/">${x.guide}</a></li>`;
   return `<section class="getthere"><h2>${x.h}</h2><ul>${li}</ul></section>`;
 }
@@ -306,7 +307,8 @@ function getThere(l, b, g) {
 function guidePage(url, l) {
   const G = GUIDE[l], path = "/flight-delay/";
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
-  const ah = AFF.airhelp ? `<h2>AirHelp</h2><p>${GUIDE_AH[l]}</p><p>${affA(AFF.airhelp, GUIDE_AH_BTN[l], l, "btn p")}</p>` : "";
+  const N = AFF.claimName;
+  const ah = AFF.claim ? `<h2>${N}</h2><p>${GUIDE_AH[l].replaceAll("AirHelp", N)}</p><p>${affA(AFF.claim, GUIDE_AH_BTN[l].replaceAll("AirHelp", N), l, "btn p")}</p>` : "";
   const body = crumbHtml([[STR[l].home, P(l) + "/"], [G.h1, P(l) + path]]) + `<h1>${G.h1}</h1>` + G.html.replace("{AH}", ah)
     + `<p><a href="${P(l)}/beaches/">${STR[l].allCountries} →</a></p>`;
   const head = ld({ "@context": "https://schema.org", "@type": "Article", headline: G.h1, description: G.desc, inLanguage: l, url: HOST + P(l) + path,

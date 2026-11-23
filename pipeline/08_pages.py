@@ -12,7 +12,12 @@ AV = json.load(open("data/avanto.json"))
 TODAY = dt.date.today().isoformat()
 D0 = T["sst_dates"].index(TODAY) if TODAY in T["sst_dates"] else 0
 # Affiliate-tunnukset lisätään tähän, kun kumppaniohjelmat on hyväksytty (esim. Travelpayouts / Booking.com)
-AFF = {"flights": None, "hotels": None}
+# Kumppanilinkit (Travelpayouts). {iata} = kohdekenttä. None = tavallinen linkki ilman kumppanimerkintää.
+AFF = {"flights": "https://tp.media/r?campaign_id=100&marker=810624&p=4114&sub_id=warmsea&trs=605657&u=https%3A%2F%2Fwww.aviasales.com%2F%3Fdestination%3D{iata}", "hotels": None}
+AFFL = {"fi": "Kumppanilinkki (mainos)", "en": "Affiliate link (ad)"}
+def aff_tag(kind, lang, short=False):
+    if not AFF.get(kind): return ""
+    return f" <small class='aff'>{('mainos' if lang == 'fi' else 'ad') if short else AFFL[lang]}</small>"
 
 def slug(s):
     s = unicodedata.normalize("NFD", s); s = "".join(c for c in s if not ("̀" <= c <= "ͯ")).lower()
@@ -56,6 +61,7 @@ def hotels_url(place):
     return "https://www.booking.com/searchresults.html?ss=" + urllib.parse.quote(place)
 
 CSS = """:root{--ink:#14232e;--muted:#5d6b75;--line:#e3e7ea;--accent:#0b6fa4;--soft:#e3f1f8}
+small.aff{font-size:11px;color:var(--muted);background:#f1f4f6;border-radius:6px;padding:1px 6px;white-space:nowrap;align-self:center}
 *{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--ink);background:#f6f8f9;line-height:1.55}
 header{background:#fff;border-bottom:1px solid var(--line)}header div{max-width:820px;margin:0 auto;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
 header a{color:var(--ink);text-decoration:none;font-weight:750}header nav{display:flex;gap:14px}header nav a{font-weight:600;color:var(--accent);font-size:14px}
@@ -197,7 +203,7 @@ for lang in ("fi", "en"):
         rows += (f"<tr><td>{k}</td><td><a href='{dp}'>{e(nm(d))}</a><div class='muted'>{e(d['cfi'] if lang == 'fi' else d['cen'])}</div></td>"
                  f"<td class='t'><span class='dot' style='background:{tcol(d['t'])}'></span>{fmt(d['t'], lang)} °C</td>"
                  f"<td class='muted'>{trend_txt(d['trend'], lang)}</td><td>{(wxe(d['sym'][0]) + ' ' + str(d['air'][0]) + '°') if d['air'] else '–'}</td>"
-                 f"<td><a class='muted' href='{e(flights_url(d['en'], d['iata'], lang))}' rel='nofollow sponsored' target='_blank'>✈︎ {'Lennot' if lang == 'fi' else 'Flights'}</a></td></tr>")
+                 f"<td><a class='muted' href='{e(flights_url(d['en'], d['iata'], lang))}' rel='nofollow sponsored' target='_blank'>✈︎ {'Lennot' if lang == 'fi' else 'Flights'}</a>{aff_tag('flights', lang, True)}</td></tr>")
     body = (f"<h1>{e(ttl)}</h1><p class='upd'>{upd[lang]}</p><p class='lead'>{lead}</p>"
             f"<table><tr>{''.join(f'<th>{c}</th>' for c in cols)}</tr>{rows}</table>"
             + ("<p class='muted'>Viikko = miten meriveden lämpötila muuttuu seuraavan viikon aikana. Ilma = päivän ylin lämpötila tänään. Lentolinkit avaavat lentohaun Helsingistä.</p>" if lang == "fi"
@@ -229,7 +235,7 @@ for lang in ("fi", "en"):
                  f"<div class='card'><div class='k'>{'Ilma tänään' if lang == 'fi' else 'Air today'}</div><div class='v'>{(wxe(d['sym'][0]) + ' ' + str(d['air'][0]) + '°') if d['air'] else '–'}</div><div class='x'>{'päivän ylin' if lang == 'fi' else 'daily max'}</div></div>"
                  f"<div class='card'><div class='k'>{'Rannat' if lang == 'fi' else 'Beaches'}</div><div class='v'>{d['n']}</div><div class='x'>{d['exc']} {'erinomaista' if lang == 'fi' else 'excellent'}</div></div></div>")
         place = n.split(" (")[0]
-        cta = (f"<div class='cta'><a class='btn p' href='{e(flights_url(d['en'], d['iata'], lang))}' rel='nofollow sponsored' target='_blank'>✈︎ {'Lennot Helsingistä' if lang == 'fi' else 'Find flights'}</a>"
+        cta = (f"<div class='cta'><a class='btn p' href='{e(flights_url(d['en'], d['iata'], lang))}' rel='nofollow sponsored' target='_blank'>✈︎ {'Hae lentoja' if lang == 'fi' else 'Find flights'}</a>{aff_tag('flights', lang)}"
                f"<a class='btn s' href='{e(hotels_url(d['en'].split(' (')[0]))}' rel='nofollow sponsored' target='_blank'>🏨 {'Majoitus' if lang == 'fi' else 'Hotels'}</a>"
                f"<a class='btn s' href='/?b={urllib.parse.quote(S[d['top'][0]][0])}'>🗺️ {'Kartalla' if lang == 'fi' else 'On the map'}</a></div>")
         fc = ""
