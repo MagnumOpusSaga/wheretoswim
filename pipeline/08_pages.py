@@ -75,7 +75,10 @@ td a{color:var(--ink);font-weight:650}.t{font-weight:780;white-space:nowrap}.dot
 .cities{columns:3 170px;gap:16px;background:#fff;border-radius:12px;padding:12px 16px}.cities a{display:block;color:var(--ink);padding:3px 0;text-decoration:none}.cities a:hover{color:var(--accent)}
 footer{max-width:820px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}footer a{color:var(--muted)}"""
 
-def page(path, lang, ttl, desc, body, alt=None, ld=None):
+def page(path, lang, ttl, desc, body, alt=None, ld=None, canonical=None):
+    """canonical: toisen sivuston osoite (esim. Latutilanne). Silloin sivu ei mene sitemapiin eikä sillä ole hreflangeja."""
+    if canonical: alt = None
+    canon = canonical or f"{BASE}{path}"
     alt = alt or {}
     links = "".join(f'<link rel="alternate" hreflang="{k}" href="{BASE}{v}">' for k, v in alt.items())
     if alt: links += f'<link rel="alternate" hreflang="x-default" href="{BASE}{alt.get("en", path)}">'
@@ -87,15 +90,15 @@ def page(path, lang, ttl, desc, body, alt=None, ld=None):
     foot = ("Data: Euroopan ympäristökeskus EEA, Copernicus Marine Service, MET Norway (CC BY 4.0), Suomen ympäristökeskus Syke (CC BY 4.0), Lipas / Jyväskylän yliopisto (CC BY 4.0), GeoNames (CC BY 4.0)."
             if lang == "fi" else "Data: European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), GeoNames (CC BY 4.0).")
     doc = f"""<!DOCTYPE html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{e(ttl)}</title><meta name="description" content="{e(desc)}"><link rel="canonical" href="{BASE}{path}">{links}
+<title>{e(ttl)}</title><meta name="description" content="{e(desc)}"><link rel="canonical" href="{canon}">{links}
 <meta property="og:type" content="website"><meta property="og:site_name" content="Where to Swim"><meta property="og:title" content="{e(ttl)}"><meta property="og:description" content="{e(desc)}">
-<meta property="og:url" content="{BASE}{path}"><meta property="og:image" content="{BASE}/og.png"><meta name="twitter:card" content="summary_large_image">
+<meta property="og:url" content="{canon}"><meta property="og:image" content="{BASE}/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0b6fa4">
 {f'<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>' if ld else ''}<link rel="stylesheet" href="/pages.css"><script data-cfasync="false">(function(){{var s=document.createElement("script");s.async=1;s.setAttribute("data-cmp-ab","2");s.src="https://emrldtp.com/NjA1NjU3.js?t=605657";document.head.appendChild(s);}})();</script></head>
 <body><header><div><a href="{'/fi/lammin-meri-nyt/' if lang == 'fi' else '/'}">🏊 Where to Swim</a><nav>{nav}{other}</nav></div></header><main>{body}</main>
 <footer>{foot} · <a href="/">wheretoswimtoday.com</a></footer></body></html>"""
     p = OUT + path + "index.html"; os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "w").write(doc)
-    URLS.append(path)
+    if not canonical: URLS.append(path)
 URLS = []
 
 # ---------------------------------------------------------------- lomakohteet
@@ -295,7 +298,8 @@ for c, aa in by_city.items():
     ld = {"@context": "https://schema.org", "@type": "ItemList", "name": f"Avantouintipaikat {c}", "itemListElement": [
         {"@type": "ListItem", "position": k, "item": {"@type": "SportsActivityLocation", "name": a["n"], "address": {"@type": "PostalAddress", "streetAddress": a["addr"], "addressLocality": a["city"], "addressCountry": "FI"},
          "geo": {"@type": "GeoCoordinates", "latitude": a["la"], "longitude": a["lo"]}}} for k, a in enumerate(aa, 1)]}
-    page(f"/fi/avanto/{city_slug[c]}/", "fi", ttl, desc, body, None, ld)
+    # suomenkieliset avantohaut ohjataan Latutilanteeseen (samat kuntaslugit)
+    page(f"/fi/avanto/{city_slug[c]}/", "fi", ttl, desc, body, None, ld, canonical=f"https://latutilanne.com/fi/{city_slug[c]}/avannot/")
 # avantojen pääsivu
 cities = sorted(by_city, key=lambda c: c)
 top_c = sorted(by_city, key=lambda c: -len(by_city[c]))[:8]
@@ -306,7 +310,7 @@ body = (f"<p class='upd'>{upd['fi']}</p><h1>Avantouintipaikat Suomessa</h1><p cl
         "Jokaiselta paikalta löydät palvelut, sään ja lähimmän mitatun veden lämpötilan.</p>"
         "<h2>Valitse kunta</h2><div class='cities'>" + "".join(f"<a href='/fi/avanto/{city_slug[c]}/'>{e(c)} ({len(by_city[c])})</a>" for c in cities) + "</div>"
         "<div class='disc'>Talviuinti on omalla vastuulla. Älä ui yksin ja tarkista avannon kunto. Paikkatiedot: Lipas.fi (Jyväskylän yliopisto, CC BY 4.0).</div>")
-page("/fi/avanto/", "fi", ttl, desc, body)
+page("/fi/avanto/", "fi", ttl, desc, body, canonical="https://latutilanne.com/fi/avannot/")
 open("site/pages_urls.txt", "w").write("\n".join(URLS) + "\n")
 open(OUT + "/pages.css", "w").write(CSS)
 # kompakti avantolista karttasovelluksen "Avannot lähellä" -näkymään
