@@ -91,7 +91,7 @@ def page(path, lang, ttl, desc, body, alt=None, ld=None):
 <meta property="og:type" content="website"><meta property="og:site_name" content="Where to Swim"><meta property="og:title" content="{e(ttl)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{BASE}{path}"><meta property="og:image" content="{BASE}/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0b6fa4">
-{f'<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>' if ld else ''}<link rel="stylesheet" href="/pages.css"></head>
+{f'<script type="application/ld+json">{json.dumps(ld, ensure_ascii=False)}</script>' if ld else ''}<link rel="stylesheet" href="/pages.css"><script data-cfasync="false">(function(){{var s=document.createElement("script");s.async=1;s.setAttribute("data-cmp-ab","2");s.src="https://emrldtp.com/NjA1NjU3.js?t=605657";document.head.appendChild(s);}})();</script></head>
 <body><header><div><a href="{'/fi/lammin-meri-nyt/' if lang == 'fi' else '/'}">🏊 Where to Swim</a><nav>{nav}{other}</nav></div></header><main>{body}</main>
 <footer>{foot} · <a href="/">wheretoswimtoday.com</a></footer></body></html>"""
     p = OUT + path + "index.html"; os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "w").write(doc)
