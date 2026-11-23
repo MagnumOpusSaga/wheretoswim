@@ -1,6 +1,6 @@
 // Where to Swim – Pages advanced mode (_worker.js). Rantasivut, kaupunki- ja maasivut 7 kielellä + upotettava widget.
 // Data tulee saman julkaisun staattisista tiedostoista env.ASSETSin kautta.
-import { STR, EV_EN } from "./i18n.js";
+import { STR, EV_EN, EV, MAP } from "./i18n.js";
 
 const SITE = "Where to Swim", HOST = "https://wheretoswimtoday.com";
 const LANGS = ["en", "fi", "de", "fr", "es", "it", "nl"];
@@ -29,6 +29,8 @@ const DN = {};
 const cname = (cc, l) => { try { DN[l] ??= new Intl.DisplayNames([LOC[l]], { type: "region" }); let n = DN[l].of(cc === "EL" ? "GR" : cc); if (l === "en" && cc === "NL") n = "the Netherlands"; return n; } catch (e) { return cc; } };
 const cnameBare = (cc, l) => cname(cc, l).replace(/^the /, "");
 const dayFmt = (iso, l) => new Date(iso + "T12:00:00Z").toLocaleDateString(LOC[l], { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+const COL = l => l === "fr" ? " :" : ":";
+const longDate = (iso, l) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString(LOC[l], { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Helsinki" }); };
 const todayIso = () => new Date().toISOString().slice(0, 10);
 const dIdx = dates => { const t = todayIso(); let i = dates.findIndex(d => d >= t); return i < 0 ? dates.length - 1 : i; };
 
@@ -84,8 +86,8 @@ function page(l, { title: ttl, desc, path, alt = true, head = "", body, status =
 <meta property="og:type" content="website"><meta property="og:site_name" content="${SITE}"><meta property="og:title" content="${esc(ttl.replace(/ \| Where to Swim$/, ""))}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}
 <meta property="og:url" content="${url}"><meta property="og:image" content="${HOST}/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0b6fa4">
-${head}<style>${CSS}</style></head><body><header><div><a class="logo" href="/"><img src="/favicon.svg" alt="">${SITE}</a><nav><a href="${P(l)}/beaches/">${s.allCountries}</a><a href="/">${s.nav}</a></nav></div></header><main>${body}</main>
-<footer>${langs}${s.dataL}: European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), data.gouv.fr (Licence Ouverte), GeoNames (CC BY 4.0). · <a href="${P(l)}/embed/">${s.embedLink}</a> · <a href="/">wheretoswimtoday.com</a></footer>
+${head}<style>${CSS}</style></head><body><header><div><a class="logo" href="/"><img src="/favicon.svg" alt="">${SITE}</a><nav><a href="${P(l)}/beaches/">${s.allCountries}</a><a href="${P(l)}/">${s.nav}</a></nav></div></header><main>${body}</main>
+<footer>${langs}${s.dataL}${COL(l)} European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), data.gouv.fr (Licence Ouverte), GeoNames (CC BY 4.0). · <a href="${P(l)}/embed/">${s.embedLink}</a> · <a href="/">wheretoswimtoday.com</a></footer>
 </body></html>`, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=1800" } });
 }
 const ld = o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, "\\u003c")}</script>`;
@@ -114,15 +116,15 @@ async function beach(env, url, l, id) {
   const wx = b.wx && g.w[b.wx] ? g.w[b.wx].filter(r => r[0] >= today) : null, w0 = wx && wx[0];
   const kind = s.type[b.w], csl = cslugOf(C, b.c), tsl = town ? slug(town) : "";
   const path = canonical.slice(P(l).length);
-  const crumbs = [[s.home, "/"], [cnameBare(b.c, l), `${P(l)}/beaches/${csl}/`], ...(tsl ? [[town, `${P(l)}/beaches/${csl}/${tsl}/`]] : []), [name, canonical]];
+  const crumbs = [[s.home, P(l) + "/"], [cnameBare(b.c, l), `${P(l)}/beaches/${csl}/`], ...(tsl ? [[town, `${P(l)}/beaches/${csl}/${tsl}/`]] : []), [name, canonical]];
   const desc = tNow != null ? s.beachDesc(name, town, cn, T(tNow, l), q) : s.beachDescNoT(name, town, cn, q);
   const head = ld({ "@context": "https://schema.org", "@type": SCHEMA[b.w], name, url: HOST + canonical,
     geo: { "@type": "GeoCoordinates", latitude: b.la, longitude: b.lo },
     address: { "@type": "PostalAddress", ...(town ? { addressLocality: town } : {}), addressCountry: b.c === "EL" ? "GR" : b.c } }) + crumbLd(crumbs);
 
   let h = crumbHtml(crumbs) + `<h1>${esc(name)}</h1><p class="sub">${esc([town, cn].filter(Boolean).join(", "))} · ${kind}</p>`;
-  h += `<p class="lead">${tNow != null ? s.lead(T(tNow, l), s.verdict[vIdx(tNow)]) : ""}${s.leadQ(q)}${w0 ? s.leadAir(T(w0[1], l), w0[2] + " m/s") : ""}</p>`;
-  h += `<div class="cta"><a class="btn p" href="/?b=${encodeURIComponent(m.id)}">🗺️ ${s.openMap}</a><button class="btn s" id="share">⤴ ${s.share}</button><a class="btn s" href="${P(l)}/embed/?b=${encodeURIComponent(m.id)}">&lt;/&gt; ${s.embedLink}</a></div>`;
+  h += `<p class="lead">${tNow != null ? s.lead(T(tNow, l), s.verdict[vIdx(tNow)]) : ""}${"EGSPN".includes(b.h[0]) ? s.leadQ(q) : ""}${w0 ? s.leadAir(T(w0[1], l), w0[2] + " m/s") : ""}</p>`;
+  h += `<div class="cta"><a class="btn p" href="${P(l)}/?b=${encodeURIComponent(m.id)}">🗺️ ${s.openMap}</a><button class="btn s" id="share">⤴ ${s.share}</button><a class="btn s" href="${P(l)}/embed/?b=${encodeURIComponent(m.id)}">&lt;/&gt; ${s.embedLink}</a></div>`;
   h += `<div class="cards"><div class="card"><div class="k">${s.waterToday}</div><div class="v" style="color:${tempColor(tNow)}">${tNow != null ? nf(tNow, 0, l) + " °C" : "–"}</div>${tNow != null && l === "en" ? `<div class="x">${F(tNow)} °F</div>` : ""}<div class="x">${tNow != null ? (sst ? s.model : s.measured(dayFmt(lakeLast[0], l))) : s.notAvail}</div></div>
 <div class="card"><div class="k">${s.euQuality}</div><div class="v" style="color:${qc};font-size:21px;padding:4px 0">${q}</div><div class="x">${s.season}</div></div>
 <div class="card"><div class="k">${s.weatherToday}</div><div class="v">${w0 ? WX(w0[4]) + " " + w0[1] + "°" : "–"}</div><div class="x">${w0 ? s.wind + " " + w0[2] + " m/s" + (w0[3] ? ", " + w0[3] + " mm" : "") : ""}</div></div></div>`;
@@ -132,13 +134,13 @@ async function beach(env, url, l, id) {
     h += `<h2>${s.lakeH}</h2><table><tr><th>${s.dayH}</th><th>${s.waterH}</th></tr>${b.lake[0].slice().reverse().map(([dd, t]) => `<tr><td>${dayFmt(dd, l)}</td><td><span class="dot" style="background:${tempColor(t)}"></span>${TH(t, l, 1)}</td></tr>`).join("")}</table><p class="muted">${s.lakeNote(esc(b.lake[1]), nf(b.lake[2], 1, l))}</p>`;
   }
   if (wx && wx.length) h += `<h2>${s.wxH}</h2><table><tr><th>${s.dayH}</th><th></th><th>${s.maxH}</th><th>${s.windH}</th><th>${s.rainH}</th></tr>${wx.map(r => `<tr><td>${r[0] === today ? s.today : dayFmt(r[0], l)}</td><td>${WX(r[4])}</td><td>${TH(r[1], l)}</td><td>${r[2]} m/s</td><td>${r[3] ? r[3] + " mm" : "–"}</td></tr>`).join("")}</table>`;
-  h += `<h2>${s.histH}</h2><div class="hist">${[2025, 2024, 2023, 2022, 2021].map((y, k) => `<span><span class="dot" style="background:${QC[b.h[k]] || QC["-"]}"></span>${y}: ${s.q[b.h[k]] || s.q["-"]}</span>`).join("")}</div><p class="muted">${s.histNote}</p>`;
+  h += `<h2>${s.histH}</h2><div class="hist">${[2025, 2024, 2023, 2022, 2021].map((y, k) => `<span><span class="dot" style="background:${QC[b.h[k]] || QC["-"]}"></span>${y}${COL(l)} ${s.q[b.h[k]] || s.q["-"]}</span>`).join("")}</div><p class="muted">${s.histNote}</p>`;
   if (b.smp) h += `<h2>${s.smpH}</h2><table><tr><td>${s.dateH}</td><td>${dayFmt(b.smp[0], l)} ${b.smp[0].slice(0, 4)}</td></tr><tr><td>${s.ecoli}</td><td>${esc(b.smp[1] ?? "–")} /100 ml</td></tr><tr><td>${s.entero}</td><td>${esc(b.smp[2] ?? "–")} /100 ml</td></tr></table><p class="muted">${s.smpSrc}</p>`;
-  if (b.ev) h += `<h2>${s.evH}</h2><ul>${Object.entries(b.ev).map(([k, n]) => `<li>${esc(l === "fr" ? k : EV_EN[k] || k)}${n > 1 ? ` (${n}×)` : ""}</li>`).join("")}</ul>`;
+  if (b.ev) h += `<h2>${s.evH}</h2><ul>${Object.entries(b.ev).map(([k, n]) => `<li>${esc(l === "fr" ? k : (EV[l] && EV[l][k]) || EV_EN[k] || k)}${n > 1 ? ` (${n}×)` : ""}</li>`).join("")}</ul>`;
   const near = (b.n || []).map(x => lookup(idx, x)).filter(Boolean);
   if (near.length) h += `<h2>${s.nearH}</h2><ul class="near">${near.map(n => `<li><a href="${beachPath(l, n.id, n.name, n.town)}"><span>${esc(title(n.name))}${n.town ? `<span class="muted"> · ${esc(n.town)}</span>` : ""}</span><span><span class="dot" style="background:${QC[n.q] || QC["-"]}"></span>${s.q[n.q] || s.q["-"]}</span></a></li>`).join("")}</ul>`;
   if (tsl) h += `<p><a href="${P(l)}/beaches/${csl}/${tsl}/">${esc(s.townH1(town))} →</a></p>`;
-  h += `<div class="disc">${s.disc(esc(g.f.slice(0, 10)))}</div>` + shareJs(l);
+  h += `<div class="disc">${s.disc(esc(longDate(g.f, l)))}</div>` + shareJs(l);
   return page(l, { title: s.beachTitle(name, town), desc, path, head, body: h });
 }
 
@@ -161,18 +163,18 @@ async function town(env, url, l, csl, tsl) {
   const temps = rows.map(r => r.tt).filter(x => x != null), n = rows.length;
   const best = rows.find(r => r.tt != null);
   const lead = temps.length ? s.townLead(esc(t[1]), n, rangeTxt(Math.min(...temps), Math.max(...temps), l), `<a href="${beachPath(l, best.id, best.name, t[1])}">${esc(best.name)}</a>`) : s.townLeadNoT(esc(t[1]), n);
-  const crumbs = [[s.home, "/"], [cnameBare(cc, l), `${P(l)}/beaches/${csl}/`], [t[1], P(l) + path]];
+  const crumbs = [[s.home, P(l) + "/"], [cnameBare(cc, l), `${P(l)}/beaches/${csl}/`], [t[1], P(l) + path]];
   const tNow = townTemp(t, di);
   const desc = s.townDesc(t[1], cn, tNow != null ? T(tNow, l) : null, n);
   let h = crumbHtml(crumbs) + `<h1>${esc(s.townH1(t[1]))}</h1><p class="sub">${esc(cn)} · ${s.beachesN(n)}</p><p class="lead">${lead}</p>`;
-  h += `<div class="cta"><a class="btn p" href="/?b=${encodeURIComponent(rows[0].id)}">🗺️ ${s.openMap}</a><button class="btn s" id="share">⤴ ${s.share}</button></div>`;
+  h += `<div class="cta"><a class="btn p" href="${P(l)}/?b=${encodeURIComponent(rows[0].id)}">🗺️ ${s.openMap}</a><button class="btn s" id="share">⤴ ${s.share}</button></div>`;
   h += `<h2>${s.townBeachesH}</h2><table><tr><th>${s.colBeach}</th><th>${s.colWater}</th><th>${s.colQ}</th></tr>${rows.map(r => `<tr><td><a href="${beachPath(l, r.id, r.name, t[1])}">${esc(r.name)}</a><br><small class="f">${s.type[r.w]}</small></td><td>${r.tt != null ? `<span class="dot" style="background:${tempColor(r.tt)}"></span>${TH(r.tt, l)}` : "–"}</td><td><span class="dot" style="background:${QC[r.q] || QC["-"]}"></span>${s.q[r.q] || s.q["-"]}</td></tr>`).join("")}</table>`;
   if (t[5]) h += `<h2>${s.townSstH}</h2><table><tr><th>${s.dayH}</th><th>${s.waterH}</th></tr>${t[5].slice(di).map((v, k) => `<tr><td>${k === 0 ? s.today : dayFmt(TW.d[di + k], l)}</td><td><span class="dot" style="background:${tempColor(v)}"></span>${TH(v, l, 1)}</td></tr>`).join("")}</table>`;
   const wr = rows.find(r => r.b && r.b.wx && r.g.w[r.b.wx]); const wx = wr ? wr.g.w[wr.b.wx].filter(r => r[0] >= today) : null;
   if (wx && wx.length) h += `<h2>${s.wxH}</h2><table><tr><th>${s.dayH}</th><th></th><th>${s.maxH}</th><th>${s.windH}</th><th>${s.rainH}</th></tr>${wx.map(r => `<tr><td>${r[0] === today ? s.today : dayFmt(r[0], l)}</td><td>${WX(r[4])}</td><td>${TH(r[1], l)}</td><td>${r[2]} m/s</td><td>${r[3] ? r[3] + " mm" : "–"}</td></tr>`).join("")}</table>`;
   const near = TW.t.filter(x => x !== t).map(x => [x, hav(t[2], t[3], x[2], x[3])]).sort((a, b) => a[1] - b[1]).slice(0, 8);
   if (near.length) h += `<h2>${s.nearTownsH}</h2><ul class="near">${near.map(([x, d]) => { const v = townTemp(x, di); return `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/"><span>${esc(x[1])}<span class="muted"> · ${nf(d, 0, l)} km · ${s.beachesN(x[4].length)}</span></span><span>${v != null ? `<span class="dot" style="background:${tempColor(v)}"></span>${nf(v, 0, l)} °C` : ""}</span></a></li>`; }).join("")}</ul>`;
-  h += `<p><a href="${P(l)}/beaches/${csl}/">${esc(s.allIn(cn))} →</a></p><div class="disc">${s.disc(esc(TW.f.slice(0, 10)))}</div>` + shareJs(l);
+  h += `<p><a href="${P(l)}/beaches/${csl}/">${esc(s.allIn(cn))} →</a></p><div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>` + shareJs(l);
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "ItemList", name: s.townH1(t[1]), itemListElement: rows.slice(0, 50).map((r, i) => ({ "@type": "ListItem", position: i + 1, url: HOST + beachPath(l, r.id, r.name, t[1]), name: r.name })) });
   return page(l, { title: s.townTitle(t[1], n), desc, path, head, body: h });
 }
@@ -186,14 +188,14 @@ async function country(env, url, l, csl) {
   const cc = c[0], TW = await asset(env, o, `/data/towns/${cc}.json`), di = dIdx(TW.d), cn = cname(cc, l), cb = cnameBare(cc, l);
   const ct = c[4] ? c[4][dIdx(C.d)] : null;
   const ranked = TW.t.map(x => [x, townTemp(x, di)]).filter(x => x[1] != null).sort((a, b) => b[1] - a[1]).slice(0, 12);
-  const crumbs = [[s.home, "/"], [s.allCountries, `${P(l)}/beaches/`], [cb, P(l) + path]];
+  const crumbs = [[s.home, P(l) + "/"], [s.allCountries, `${P(l)}/beaches/`], [cb, P(l) + path]];
   let h = crumbHtml(crumbs) + `<h1>${flag(cc)} ${esc(s.countryH1(cn))}</h1><p class="lead">${s.countryLead(c[2].toLocaleString(LOC[l]), c[3].toLocaleString(LOC[l]), ct != null ? T(ct, l) : null)}</p>`;
-  h += `<div class="cta"><a class="btn p" href="/">🗺️ ${s.nav}</a></div>`;
+  h += `<div class="cta"><a class="btn p" href="${P(l)}/">🗺️ ${s.nav}</a></div>`;
   if (ranked.length) h += `<h2>${s.warmestH}</h2><ul class="near">${ranked.map(([x, v]) => `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/"><span>${esc(x[1])}<span class="muted"> · ${s.beachesN(x[4].length)}</span></span><span><span class="dot" style="background:${tempColor(v)}"></span>${TH(v, l)}</span></a></li>`).join("")}</ul>`;
   const coll = new Intl.Collator(LOC[l]);
   const az = TW.t.slice().sort((a, b) => coll.compare(a[1], b[1]));
   h += `<h2>${s.allPlacesH}</h2><ul class="az">${az.map(x => `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/">${esc(x[1])}</a> <span>${x[4].length}</span></li>`).join("")}</ul>`;
-  h += `<div class="disc">${s.disc(esc(TW.f.slice(0, 10)))}</div>`;
+  h += `<div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>`;
   const head = crumbLd(crumbs);
   return page(l, { title: s.countryTitle(cn, c[2].toLocaleString(LOC[l])), desc: s.countryDesc(cn, c[2].toLocaleString(LOC[l])), path, head, body: h });
 }
@@ -204,9 +206,9 @@ async function index(env, url, l) {
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
   const coll = new Intl.Collator(LOC[l]), total = C.c.reduce((a, r) => a + r[2], 0);
   const list = C.c.slice().sort((a, b) => coll.compare(cnameBare(a[0], l), cnameBare(b[0], l)));
-  let h = crumbHtml([[s.home, "/"], [s.allCountries, P(l) + path]]) + `<h1>${s.indexH1}</h1><p class="lead">${s.indexLead(total.toLocaleString(LOC[l]))}</p>`;
+  let h = crumbHtml([[s.home, P(l) + "/"], [s.allCountries, P(l) + path]]) + `<h1>${s.indexH1}</h1><p class="lead">${s.indexLead(total.toLocaleString(LOC[l]))}</p>`;
   h += `<ul class="near">${list.map(r => `<li><a href="${P(l)}/beaches/${r[1]}/"><span>${flag(r[0])} ${esc(cnameBare(r[0], l))}<span class="muted"> · ${s.beachesN(r[2])}</span></span><span>${r[4] ? `<span class="dot" style="background:${tempColor(r[4][di])}"></span>${TH(r[4][di], l)}` : ""}</span></a></li>`).join("")}</ul>`;
-  return page(l, { title: s.indexTitle, desc: s.indexLead(total.toLocaleString(LOC[l])), path, head: crumbLd([[s.home, "/"], [s.allCountries, P(l) + path]]), body: h });
+  return page(l, { title: s.indexTitle, desc: s.indexLead(total.toLocaleString(LOC[l])), path, head: crumbLd([[s.home, P(l) + "/"], [s.allCountries, P(l) + path]]), body: h });
 }
 
 // ---------- upotettava widget ----------
@@ -229,7 +231,7 @@ a.w{display:flex;flex-direction:column;justify-content:space-between;height:100%
 </style></head><body><a class="w" href="${href}" target="_blank" rel="noopener">
 <div><div class="n">${esc(name)}</div><div class="p">${esc([m.town, cname(b.c, l)].filter(Boolean).join(", "))}</div></div>
 <div class="m"><div><div class="k">${s.waterToday}</div><div class="t">${tNow != null ? tv(tNow) : "–"}</div></div>
-<div class="r">${w0 ? `${WX(w0[4])} ${s.wAir} ${tv(w0[1])}<br>` : ""}<span class="d" style="background:${QC[q] || QC["-"]}"></span>${s.euQuality}: ${s.q[q] || s.q["-"]}</div></div>
+<div class="r">${w0 ? `${WX(w0[4])} ${s.wAir} ${tv(w0[1])}<br>` : ""}<span class="d" style="background:${QC[q] || QC["-"]}"></span>${s.euQuality}${COL(l)} ${s.q[q] || s.q["-"]}</div></div>
 <div class="f"><b><img src="${HOST}/favicon.svg" alt="">© ${SITE}</b><span>Copernicus · EEA · MET Norway</span></div></a></body></html>`;
   return new Response(html, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=1800", "x-robots-tag": "noindex" } });
 }
@@ -276,6 +278,21 @@ document.getElementById("cp").onclick=async()=>{ if(!sel) return; try{ await nav
   return page(l, { title: `${s.embedTitle} | ${SITE}`, desc: s.embedLead, path, body: h, noindex: !!bid });
 }
 
+
+// ---------- karttasivu kielittäin (/fi/, /de/ …) ----------
+async function mapPage(env, url, l) {
+  let h = await asset(env, url.origin, "/", "text");
+  const m = MAP[l], u = HOST + P(l) + "/";
+  h = h.replace('<html lang="en">', `<html lang="${l}">`)
+    .replace(/<title>[^<]*<\/title>/, `<title>${esc(m.t)}</title>`)
+    .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(m.d)}">`)
+    .replace(/<meta property="og:title" content="[^"]*">/, `<meta property="og:title" content="${esc(m.t)}">`)
+    .replace(/<meta property="og:description" content="[^"]*">/, `<meta property="og:description" content="${esc(m.d)}">`)
+    .replace('<meta property="og:url" content="https://wheretoswimtoday.com/">', `<meta property="og:url" content="${u}">`)
+    .replace('<link rel="canonical" href="https://wheretoswimtoday.com/">', `<link rel="canonical" href="${u}"><script>window.__LANG=${JSON.stringify(l)}</script>`);
+  return new Response(h, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=600" } });
+}
+
 // ---------- reititys ----------
 const DYN = /^\/(beach|beaches|embed)(\/|$)/;
 export default {
@@ -284,7 +301,8 @@ export default {
     let path = url.pathname, l = "en";
     const lm = path.match(/^\/(fi|de|fr|es|it|nl)(\/.*|)$/);
     if (lm) { l = lm[1]; path = lm[2] || "/"; }
-    if (lm && path === "/" ) return Response.redirect(HOST + P(l) + "/beaches/", 302);
+    if (lm && !lm[2]) return Response.redirect(HOST + P(l) + "/", 301);
+    if (lm && path === "/" && request.method === "GET") { try { return await mapPage(env, url, l); } catch (e) { return env.ASSETS.fetch(new Request(url.origin + "/")); } }
     if (!DYN.test(path) || request.method !== "GET") return env.ASSETS.fetch(request);
     if (url.hostname === "www.wheretoswimtoday.com") return Response.redirect(HOST + url.pathname + url.search, 301);
     const cache = caches.default, key = new Request(url.toString());
