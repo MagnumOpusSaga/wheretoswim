@@ -1,0 +1,7 @@
+numpy
+scipy
+xarray
+zarr<4
+fsspec
+aiohttp
+requests

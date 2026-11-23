@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://wheretoswimtoday.com/sitemap.xml

@@ -1,0 +1,62 @@
+name: Daily update
+
+on:
+  schedule:
+    - cron: "17 3 * * *"   # joka aamu ~05–06 Suomen aikaa
+  workflow_dispatch: {}     # käsin: Actions → Daily update → Run workflow
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      CLOUDFLARE_ACCOUNT_ID: 040aa50827cdfb7dc725e8bc0600c6ca
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install Python packages
+        run: pip install -r requirements.txt
+
+      - name: Sea temperature (Copernicus Marine)
+        run: python pipeline/02_sst.py
+
+      - name: Finnish lake temperatures (Syke)
+        continue-on-error: true   # jos Syke ei vastaa, käytetään edellistä dataa
+        run: python pipeline/03_fi_lakes.py
+
+      - name: Winter swimming places (Lipas + Syke + MET)
+        continue-on-error: true
+        run: python pipeline/03b_avanto.py
+
+      - name: Weather (MET Norway)
+        run: python pipeline/04_weather.py
+
+      - name: Build today's data and pages
+        run: |
+          python pipeline/05b_today.py
+          python pipeline/06_page.py
+          python pipeline/08_pages.py
+          python pipeline/07_beach_shards.py
+          bash pipeline/09_dist.sh
+
+      - name: Deploy to Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npx -y wrangler@4 pages deploy dist --project-name=wheretoswim --branch=main --commit-dirty=true

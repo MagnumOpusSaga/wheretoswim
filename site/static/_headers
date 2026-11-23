@@ -1,0 +1,14 @@
+/data/today.json
+  Cache-Control: public, max-age=1800
+/data/g/*
+  Cache-Control: public, max-age=1800
+/data/towns/*
+  Cache-Control: public, max-age=1800
+/data/countries.json
+  Cache-Control: public, max-age=1800
+/data/idx.txt
+  Cache-Control: public, max-age=3600
+/data/*
+  Cache-Control: public, max-age=86400
+/favicon*
+  Cache-Control: public, max-age=604800

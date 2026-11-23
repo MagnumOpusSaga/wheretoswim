@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Where to Swim – beach water quality & temperature today</title>
+<meta name="description" content="Find where to swim today: EU bathing water quality, latest samples, water temperature forecast and weather for every official beach. France and Finland in beta.">
+<meta property="og:title" content="Where to Swim – beach water quality & temperature today">
+<meta property="og:description" content="EU bathing water quality, water temperature forecast and weather for every official beach.">
+<meta property="og:url" content="https://wheretoswimtoday.com/">
+<meta property="og:image" content="https://wheretoswimtoday.com/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://wheretoswimtoday.com/">
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0b6fa4">
+<style>/*LEAFLET_CSS*/</style>
+<style>
+:root{
+  --sea:#d5e9f3; --land:#f6f3ec; --land2:#ece8df; --ink:#14232e; --muted:#5d6b75; --line:#e3e7ea;
+  --card:#ffffff; --accent:#0b6fa4; --accent-soft:#e3f1f8;
+  --q-E:#1f78c8; --q-G:#2fa35b; --q-S:#e3b505; --q-P:#d64545; --q-N:#9aa4ab;
+  --shadow:0 6px 24px rgba(20,35,46,.16);
+  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;font-family:var(--font);color:var(--ink);background:var(--sea);-webkit-font-smoothing:antialiased}
+#map{position:fixed;inset:0;background:var(--sea)}
+.leaflet-container{background:var(--sea);font-family:var(--font)}
+.leaflet-control-attribution{font-size:10px;background:rgba(255,255,255,.75)!important}
+.leaflet-control-zoom{display:none}
+
+/* Yläpalkki */
+.top{position:fixed;left:0;right:0;top:0;z-index:1000;padding:10px 10px 0;pointer-events:none}
+.top>*{pointer-events:auto}
+@media(max-width:420px){.brand{font-size:13px}.brand small{font-size:10.5px}.iconbtn{width:34px}}
+@media(min-width:760px){.top{right:auto;width:600px}}
+.bar{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:6px 6px 6px 12px}
+.brand{font-weight:750;font-size:14px;letter-spacing:-.01em;white-space:nowrap}
+.brand small{display:block;font-weight:500;font-size:11px;color:var(--muted);letter-spacing:0}
+.search{flex:1;min-width:0;position:relative}
+.search input{width:100%;border:1px solid var(--line);background:#f7f9fa;border-radius:10px;padding:9px 10px;font-size:15px;font-family:inherit;color:var(--ink);outline:none}
+.search input:focus{border-color:var(--accent);background:#fff}
+.usw{display:inline-flex;margin-left:6px;background:#eef2f4;border-radius:8px;padding:2px;vertical-align:middle}.usw button{border:0;background:none;font:600 11px/1 inherit;font-family:inherit;padding:4px 6px;border-radius:6px;color:var(--muted);cursor:pointer}.usw button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px #0002}.big small .usw{margin-left:4px}
+.iconbtn{border:0;background:#f1f4f6;border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer;flex:none;color:var(--ink)}
+.results{position:absolute;left:0;right:0;top:44px;background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
+.results button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;background:#fff;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line)}
+.results button:hover{background:var(--accent-soft)}
+.results .sub{color:var(--muted);font-size:12px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15)}
+
+.chips{display:flex;gap:6px;overflow-x:auto;padding:8px 0 4px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:none;border:0;background:var(--card);color:var(--ink);border-radius:999px;padding:7px 12px;font:inherit;font-size:13px;font-weight:600;box-shadow:0 2px 8px rgba(20,35,46,.12);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--ink);color:#fff}
+.seg{display:flex;background:var(--card);border-radius:999px;box-shadow:0 2px 8px rgba(20,35,46,.12);padding:3px;flex:none}
+.seg button{border:0;background:transparent;border-radius:999px;padding:5px 11px;font:inherit;font-size:13px;font-weight:650;color:var(--muted);cursor:pointer}
+.seg button.on{background:var(--accent);color:#fff}
+select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;background-image:linear-gradient(45deg,transparent 50%,#5d6b75 50%),linear-gradient(135deg,#5d6b75 50%,transparent 50%);background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+
+/* Kausi-ilmoitus */
+.notice{margin-top:4px;background:#fff8e6;border:1px solid #f1dfa6;color:#5a4a12;border-radius:12px;padding:8px 34px 8px 10px;font-size:12.5px;line-height:1.35;position:relative;box-shadow:0 2px 8px rgba(20,35,46,.08)}
+.notice button{position:absolute;right:4px;top:4px;border:0;background:transparent;font-size:16px;cursor:pointer;color:#5a4a12;width:28px;height:28px}
+
+/* Selite */
+.legend{position:fixed;left:10px;bottom:22px;z-index:900;background:rgba(255,255,255,.95);border-radius:12px;box-shadow:var(--shadow);padding:8px 10px;font-size:12px;max-width:calc(100vw - 20px)}
+.legend .row{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.legend .it{display:flex;align-items:center;gap:5px;white-space:nowrap}
+.legend .dot{width:10px;height:10px;border-width:1.5px}
+.legend .ttl{font-weight:700;margin-bottom:5px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.days{display:flex;gap:4px;margin-top:6px;overflow-x:auto}
+.days button{border:1px solid var(--line);background:#fff;border-radius:8px;padding:4px 7px;font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;color:var(--muted);white-space:nowrap}
+.days button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.count{color:var(--muted);font-weight:500}
+
+.layerbtn{position:fixed;right:10px;bottom:120px;z-index:950;height:44px;padding:0 14px 0 10px;border:0;border-radius:22px;background:#fff;box-shadow:var(--shadow);font:inherit;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px}
+.layerbtn .ic{font-size:20px;line-height:1}
+.locbtn.busy .ic{animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.3}}
+.nlist{list-style:none;margin:0;padding:0}.nlist li{border-bottom:1px solid var(--line)}
+.nlist button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:#fff;padding:11px 2px;font:inherit;cursor:pointer;color:var(--ink)}
+.nlist button:hover{background:var(--accent-soft)}.nlist .nm{flex:1;min-width:0}.nlist .nm b{display:block;font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nlist .nm span{font-size:12.5px;color:var(--muted)}.nlist .tt{font-weight:780;font-size:15px;white-space:nowrap}
+.seg2{display:flex;gap:6px;margin:0 0 10px}.seg2 button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;font-weight:650;cursor:pointer;color:var(--muted)}
+.seg2 button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.toast{position:fixed;left:50%;bottom:40px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 16px;border-radius:12px;font-size:14px;font-weight:600;z-index:1300;opacity:0;transition:opacity .2s;pointer-events:none}
+.toast.on{opacity:1}
+.sh-head .x + .iconbtn{margin-left:6px}
+/* Rantakortti */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(20,35,46,.22);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:78vh;display:flex;flex-direction:column}
+.sheet.open{transform:translateY(0)}
+@media(min-width:760px){.sheet{left:auto;right:12px;bottom:12px;top:auto;width:400px;border-radius:18px;max-height:calc(100vh - 140px)}}
+.grab{width:40px;height:4px;border-radius:2px;background:#d3d9dd;margin:8px auto 0;flex:none}
+.sh-head{padding:8px 16px 10px;display:flex;gap:10px;align-items:flex-start;flex:none;border-bottom:1px solid var(--line)}
+.sh-head h2{margin:0;font-size:18px;line-height:1.2;letter-spacing:-.01em}
+.sh-head .meta{color:var(--muted);font-size:13px;margin-top:3px}
+.sh-head .x{margin-left:auto}
+.sh-body{overflow-y:auto;padding:12px 16px calc(16px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
+.today{border-radius:14px;padding:12px;display:flex;gap:12px;align-items:center;background:var(--accent-soft);margin-bottom:12px}
+.today .big{font-size:30px;font-weight:780;letter-spacing:-.02em;line-height:1}
+.today .big small{font-size:14px;font-weight:600;color:var(--muted)}
+.today .txt{font-size:13.5px;line-height:1.35}
+.today .txt b{display:block;font-size:14.5px;margin-bottom:2px}
+.sec{margin:14px 0 0}
+.sec h3{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin:0 0 7px;font-weight:700}
+.qrow{display:flex;align-items:center;gap:10px}
+.badge{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:5px 11px;color:#fff;font-weight:700;font-size:14px}
+.hist{display:flex;gap:4px;margin-left:auto}
+.hist span{display:flex;flex-direction:column;align-items:center;font-size:10px;color:var(--muted);gap:2px}
+.hist i{width:16px;height:16px;border-radius:5px;display:block}
+.note{font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:6px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;font-weight:600}
+.pill{display:inline-block;border-radius:6px;padding:1px 7px;font-size:12px;font-weight:700}
+.bars{display:flex;gap:4px;align-items:flex-end;height:86px}
+.bars .b{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:11px;gap:3px}
+.bars .b i{display:block;width:100%;border-radius:6px 6px 3px 3px;min-height:6px}
+.bars .b em{font-style:normal;font-weight:700;font-size:11.5px}
+.bars .b span{color:var(--muted);font-size:10.5px}
+.wx{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.wx div{background:#f6f8f9;border-radius:10px;padding:6px 2px;font-size:11px;line-height:1.3}
+.wx .ic{font-size:20px;display:block;margin:2px 0}
+.wx b{font-size:13px}
+.wx .w{color:var(--muted);font-size:10.5px}
+.events{display:flex;flex-wrap:wrap;gap:6px}
+.events span{background:#fdecec;color:#8a2222;border-radius:8px;padding:3px 8px;font-size:12.5px;font-weight:600}
+.links a{color:var(--accent);font-weight:600;font-size:14px;text-decoration:none}
+.disc{margin-top:16px;padding:10px 12px;background:#f6f8f9;border-radius:12px;font-size:12px;color:var(--muted);line-height:1.45}
+
+/* Info-ikkuna */
+.modal{position:fixed;inset:0;z-index:1200;background:rgba(20,35,46,.45);display:none;align-items:flex-end;justify-content:center}
+.modal.open{display:flex}
+.modal .box{background:#fff;border-radius:18px 18px 0 0;max-height:85vh;overflow-y:auto;padding:18px 18px calc(20px + env(safe-area-inset-bottom));width:100%;max-width:560px;font-size:14px;line-height:1.5}
+@media(min-width:760px){.modal{align-items:center}.modal .box{border-radius:18px}}
+.modal h2{margin:0 0 8px;font-size:19px}
+.modal h3{margin:16px 0 4px;font-size:14px}
+.modal p,.modal li{color:#33434e}
+.modal ul{padding-left:18px;margin:4px 0}
+.loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2000;background:var(--sea);font-weight:650;color:var(--muted);font-size:15px}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="loading" id="loading">Loading beaches…</div>
+
+<div class="top">
+  <div class="bar">
+    <div class="brand">Where to Swim<small data-t="sub"></small></div>
+    <div class="search">
+      <input id="q" type="search" autocomplete="off">
+      <div class="results" id="results"></div>
+    </div>
+    <button class="iconbtn" id="langBtn" aria-label="Language" style="font-size:13px;font-weight:700"></button>
+    <button class="iconbtn" id="infoBtn" aria-label="Info">ⓘ</button>
+  </div>
+  <div class="chips">
+    <div class="seg" id="mode">
+      <button data-m="q" class="on" data-t="mQ"></button>
+      <button data-m="t" data-t="mT"></button>
+    </div>
+    <select class="chip" id="region" aria-label="Region"></select>
+    <button class="chip" data-f="exc" data-t="fExc"></button>
+    <button class="chip" data-f="sea" data-t="fSea"></button>
+    <button class="chip" data-f="fresh" data-t="fFresh"></button>
+    <a class="chip" id="warmLink" href="/warm-sea-now/" style="text-decoration:none" data-t="warm"></a>
+    <a class="chip" id="cLink" href="/beaches/" style="text-decoration:none" data-t="byc"></a>
+    <a class="chip" id="avantoLink" href="/fi/avanto/" style="text-decoration:none;display:none" data-t="avanto"></a>
+  </div>
+  <div class="notice" id="notice"><span data-t="notice"></span><button aria-label="Close" id="noticeX">×</button></div>
+</div>
+
+<div class="legend" id="legend"></div>
+<div class="toast" id="toast"></div>
+<button class="layerbtn" id="satBtn" aria-label="Satellite"></button>
+<button class="layerbtn locbtn" id="locBtn" aria-label="My location"><span class="ic">📍</span><span id="locTxt"></span></button>
+
+<div class="sheet" id="sheet" aria-hidden="true">
+  <div class="grab"></div>
+  <div class="sh-head">
+    <div><h2 id="shName"></h2><div class="meta" id="shMeta"></div></div>
+    <button class="iconbtn x" id="shShare" aria-label="Share" style="font-size:16px">⤴</button>
+    <button class="iconbtn" id="shX" aria-label="Close">×</button>
+  </div>
+  <div class="sh-body" id="shBody"></div>
+</div>
+
+<div class="modal" id="modal"><div class="box">
+  <div id="modalBody"></div>
+  <p class="note" id="stamp"></p>
+  <button class="chip on" id="modalX" style="margin-top:10px" data-t="ok"></button>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function(){
+const store = { get(k){try{return localStorage.getItem(k)}catch(e){return null}}, set(k,v){try{localStorage.setItem(k,v)}catch(e){}} };
+let LANG = store.get("bwt_lang") || "en";
+
+const I18N = {
+en:{
+  sub:"Beta · 29 countries", search:"Search beach or town", mQ:"Quality", mT:"Water °C", fExc:"Excellent only", fSea:"Sea", fFresh:"Lake & river", warm:"🔥 Warm sea now", byc:"🌍 By country", avanto:"❄️ Winter swimming", sat:"Satellite", mapv:"Map",
+  notice:"The bathing season is over in most of Europe: official samples are taken in summer. Water temperatures and weather are today's data.", stale:d=>`Temperatures and weather were last updated on ${d}.`,
+  ok:"Got it", near:"Near me", nearTitle:"Bathing waters near you", sortDist:"Nearest", sortWarm:"Warmest", sortBest:"Best quality", sortAv:"❄️ Winter swimming", sauna:"sauna", water:"water", locErr:"Could not get your location. Allow location access in your browser settings.", locNo:"Your browser does not support location.", km:"km", noneNear:"No bathing waters within 100 km.", share:"Share", copied:"Link copied", shareText:(n,t,q)=>`${n}${t!=null?` – water ${t0(t)} ${U()} today`:""}, EU water quality: ${q}. Check where to swim today:`, loading:"Loading beaches…", fail:"Could not load the data. Please reload the page.",
+  q:{E:"Excellent",G:"Good",S:"Sufficient",P:"Poor",N:"Not classified","-":"No data"},
+  type:{C:"Sea",T:"Estuary",L:"Lake",R:"River"},
+  
+  reg:{eu:"All of Europe", canarias:"Canary Islands", baleares:"Balearic Islands", costasol:"Costa del Sol", sicilia:"Sicily", sardegna:"Sardinia", algarve:"Algarve", madeira:"Madeira", azores:"Azores", crete:"Crete", whole:"whole country", g_fr:"France", metro:"Mainland France", corse:"Corsica", riviera:"Côte d'Azur", atl:"Atlantic coast", manche:"Channel coast", guad:"Guadeloupe", mart:"Martinique", stm:"Saint-Martin & St-Barth", reu:"Réunion", may:"Mayotte", guy:"French Guiana", g_fi:"Finland", fi:"All of Finland", hki:"Helsinki region", tre:"Tampere region", lake:"Lakeland"},
+  legQ:"EU bathing water class 2025", legT:"Water temperature °C", beaches:"beaches", noTemp:"no data",
+  today:"Today", tomorrow:"Tom.", dow:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],
+  ww:["Winter-swimming territory","Very cold – for hardy swimmers","Cold – wetsuit recommended","Cool but swimmable","Pleasantly warm","Warm water"],
+  qGood:c=>`Water quality: ${c.toLowerCase()} (EU 2025).`, qPoor:"Note: EU class is poor.", qOther:c=>`EU class: ${c.toLowerCase()}.`,
+  airNow:(t,ic,w)=>` Air ${t}°, ${ic} wind ${w}.`, measured:d=>`Measured ${d} at the nearest station. `,
+  noTempYet:"Water temperature for this lake will be added later from satellite data.",
+  secQ:"EU bathing water class", qNote:"The class is calculated from four seasons of bacteria samples. It shows the beach's long-term level, not today's situation.",
+  secS:"Latest open sample", sDate:"Date", sEc:"E. coli", sEi:"Intestinal enterococci", per:"/100 ml",
+  sv:{good:"Good",avg:"Moderate",bad:"Poor"},
+  sNoteFR:"France publishes sample results as open data once a year, so the latest available sample is from the 2025 season.",
+  sNoneFI:"Finnish sample results are not yet available as open data. The EU class is based on them.",
+  sNone:"No sample data.",
+  secEv:"2025 season: events",
+  ev:{"Interdiction sanitaire":"Health-related bathing ban","Prolifération de cyanobactéries":"Cyanobacteria bloom","Interdiction non sanitaire":"Other bathing ban","Pollution à court terme":"Short-term pollution","Situation anormale":"Abnormal situation","Changement de qualité d'eau":"Water quality change"},
+  secSst:"Sea temperature, 7 days", sstNote:km=>`Copernicus Marine model, nearest sea cell ${km} km away. Shallow water at the beach can be warmer or colder.`,
+  secLake:"Measured water temperature", lakeNote:(st,km)=>`Nearest Syke monitoring station: ${st}, ${km} km away. It may be on a different lake, so treat this as an estimate.`,
+  secWx:"Weather", profile:"Official beach profile ↗",
+  disc:"This information is indicative, not a permission to swim. You swim at your own risk: always check local flags, bathing bans and lifeguard instructions.",
+  stamp:(d,t,a,b)=>`Water temperature and weather fetched ${d} at ${t}. Forecast ${a}–${b}.`,
+  none:"No matches",
+  info:`<h2>Where to Swim (beta)</h2>
+  <p>A map that shows, for every official EU bathing water, the quality class, the latest open sample, today's water temperature with a weekly forecast, and the weather. This beta covers all 22,289 official bathing waters in 29 European countries. Sample results are included for France so far, more countries will follow.</p>
+  <h3>Data sources</h3><ul>
+  <li><b>Quality class:</b> European Environment Agency (EEA), Bathing Water Directive reporting, season 2025.</li>
+  <li><b>Samples (France):</b> French Ministry of Health via data.gouv.fr, 2025 season results (Licence Ouverte), published once a year.</li>
+  <li><b>Sea temperature:</b> Copernicus Marine Service, Mercator GLO12 model (1/12°), daily mean of the surface layer.</li>
+  <li><b>Lake temperature (Finland):</b> Finnish Environment Institute Syke, hydrology API (CC BY 4.0).</li>
+  <li><b>Weather:</b> MET Norway Locationforecast (CC BY 4.0).</li>
+  <li><b>Base map:</b> Natural Earth. Municipalities (Finland): Statistics Finland.</li></ul>
+  <h3>How to read the quality class</h3>
+  <p>The EU class (excellent, good, sufficient, poor) is calculated from bacteria samples of the last four seasons. It describes the beach's long-term level, not today's situation.</p>
+  <h3>Disclaimer</h3>
+  <p>The information is indicative only and is not a permission to swim. Users swim at their own risk. Always follow local flags, bathing bans and lifeguard instructions. Modelled temperatures can differ from the actual temperature at the beach.</p>`
+},
+fi:{
+  sub:"Beta · 29 maata", search:"Hae rantaa tai kuntaa", mQ:"Laatu", mT:"Vesi °C", fExc:"Vain erinomaiset", fSea:"Meri", fFresh:"Järvi & joki", warm:"🔥 Lämmin meri nyt", byc:"🌍 Maittain", avanto:"❄️ Avannot", sat:"Satelliitti", mapv:"Kartta",
+  notice:"Uimakausi on ohi suurimmassa osassa Eurooppaa: virallisia näytteitä otetaan kesällä. Veden lämpötila ja sää ovat tämän päivän tietoja.", stale:d=>`Lämpötilat ja sää päivitetty viimeksi ${d}.`,
+  ok:"Selvä", near:"Oma sijainti", nearTitle:"Uimapaikat lähelläsi", sortDist:"Lähimmät", sortWarm:"Lämpimimmät", sortBest:"Paras laatu", sortAv:"❄️ Avannot", sauna:"sauna", water:"vesi", locErr:"Sijaintia ei saatu. Salli sijainti selaimen asetuksista.", locNo:"Selaimesi ei tue sijaintia.", km:"km", noneNear:"Ei uimapaikkoja 100 km säteellä.", share:"Jaa", copied:"Linkki kopioitu", shareText:(n,t,q)=>`${n}${t!=null?` – vesi tänään ${t0(t)} ${U()}`:""}, EU-vedenlaatu: ${q}. Katso missä voi uida tänään:`, loading:"Ladataan rantoja…", fail:"Datan lataus epäonnistui. Päivitä sivu.",
+  q:{E:"Erinomainen",G:"Hyvä",S:"Tyydyttävä",P:"Huono",N:"Ei luokiteltu","-":"Ei tietoa"},
+  type:{C:"Meri",T:"Jokisuu",L:"Järvi",R:"Joki"},
+  
+  reg:{eu:"Koko Eurooppa", canarias:"Kanariansaaret", baleares:"Baleaarit", costasol:"Costa del Sol", sicilia:"Sisilia", sardegna:"Sardinia", algarve:"Algarve", madeira:"Madeira", azores:"Azorit", crete:"Kreeta", whole:"koko maa", g_fr:"Ranska", metro:"Manner-Ranska", corse:"Korsika", riviera:"Côte d'Azur", atl:"Atlantin rannikko", manche:"Kanaalin rannikko", guad:"Guadeloupe", mart:"Martinique", stm:"Saint-Martin & St-Barth", reu:"Réunion", may:"Mayotte", guy:"Ranskan Guayana", g_fi:"Suomi", fi:"Koko Suomi", hki:"Pääkaupunkiseutu", tre:"Tampereen seutu", lake:"Järvi-Suomi"},
+  legQ:"EU-laatuluokka 2025", legT:"Veden lämpötila °C", beaches:"rantaa", noTemp:"ei tietoa",
+  today:"Tänään", tomorrow:"Huom.", dow:["su","ma","ti","ke","to","pe","la"],
+  ww:["Avantouinnin tasoa","Hyytävä, vain karaistuneille","Kylmä, märkäpuku suositeltava","Viileä, uitavissa","Mukavan lämmin","Lämmin vesi"],
+  qGood:c=>`Vedenlaatu ${c.toLowerCase()} (EU 2025).`, qPoor:"Huomio: EU-luokka huono.", qOther:c=>`EU-luokka: ${c.toLowerCase()}.`,
+  airNow:(t,ic,w)=>` Ilma ${t}°, ${ic} tuuli ${w}.`, measured:d=>`Mitattu ${d} lähimmällä asemalla. `,
+  noTempYet:"Tämän järven veden lämpötila lisätään myöhemmin satelliittidatasta.",
+  secQ:"EU-laatuluokka", qNote:"Luokka lasketaan neljän kauden bakteerinäytteistä. Se kuvaa rannan yleistä tasoa, ei tämän päivän tilannetta.",
+  secS:"Viimeisin avoin näyte", sDate:"Päivä", sEc:"E. coli", sEi:"Enterokokit", per:"/100 ml",
+  sv:{good:"Hyvä",avg:"Kohtalainen",bad:"Huono"},
+  sNoteFR:"Ranska julkaisee näytetulokset avoimena datana kerran vuodessa, joten tuorein saatavilla oleva näyte on kaudelta 2025.",
+  sNoneFI:"Suomen näytetulokset eivät vielä ole avointa dataa. EU-luokka perustuu niihin.",
+  sNone:"Ei näytetietoa.",
+  secEv:"Kausi 2025: tapahtumat",
+  ev:{"Interdiction sanitaire":"Terveysperusteinen uimakielto","Prolifération de cyanobactéries":"Sinileväkukinta","Interdiction non sanitaire":"Muu uimakielto","Pollution à court terme":"Lyhytaikainen saastuminen","Situation anormale":"Poikkeustilanne","Changement de qualité d'eau":"Veden laadun muutos"},
+  secSst:"Meriveden lämpötila 7 vrk", sstNote:km=>`Copernicus Marine -malli, lähin meriruutu ${km} km päässä. Rantavesi voi olla matalassa vedessä lämpimämpää tai kylmempää.`,
+  secLake:"Mitattu veden lämpötila", lakeNote:(st,km)=>`Lähin Syken havaintoasema: ${st}, ${km} km päässä. Asema voi olla eri järvellä, joten lukema on suuntaa antava.`,
+  secWx:"Sää", profile:"Virallinen rantaprofiili ↗",
+  disc:"Tiedot ovat suuntaa antavia suosituksia, eivät uimalupa. Uit omalla vastuullasi: tarkista rannan liput, uimakiellot ja paikalliset ohjeet.",
+  stamp:(d,t,a,b)=>`Veden lämpötila ja sää haettu ${d} klo ${t}. Ennuste ${a}–${b}.`,
+  none:"Ei osumia",
+  info:`<h2>Where to Swim (beta)</h2>
+  <p>Kartta näyttää jokaiselle EU-uimavedelle virallisen laatuluokan, viimeisimmän avoimen näytteen, veden lämpötilan tänään ja viikon ennusteen sekä sään. Betaversiossa ovat kaikki 22 289 virallista uimavettä 29 Euroopan maasta. Näytetulokset ovat toistaiseksi mukana Ranskalle, muita maita lisätään.</p>
+  <h3>Tietolähteet</h3><ul>
+  <li><b>Laatuluokka:</b> Euroopan ympäristökeskus EEA, uimavesidirektiivin raportointi, kausi 2025.</li>
+  <li><b>Näytteet (Ranska):</b> Ranskan terveysministeriö, data.gouv.fr, kauden 2025 tulokset (Licence Ouverte). Julkaistaan kerran vuodessa.</li>
+  <li><b>Meriveden lämpötila:</b> Copernicus Marine Service, Mercator GLO12 -malli (1/12°), pintakerroksen vuorokausikeskiarvo.</li>
+  <li><b>Järvien lämpötila (Suomi):</b> Suomen ympäristökeskus Syke, hydrologiarajapinta (CC BY 4.0).</li>
+  <li><b>Sää:</b> MET Norway Locationforecast (CC BY 4.0).</li>
+  <li><b>Pohjakartta:</b> Natural Earth. Kunnat (Suomi): Tilastokeskus.</li></ul>
+  <h3>Näin luet laatuluokkaa</h3>
+  <p>EU:n luokitus (erinomainen, hyvä, tyydyttävä, huono) lasketaan neljän viime kauden bakteerinäytteistä. Se kertoo rannan pitkän aikavälin tason, ei tämän päivän tilannetta.</p>
+  <h3>Vastuuvapaus</h3>
+  <p>Tiedot ovat suuntaa antavia suosituksia, eivät uimalupa. Käyttäjä vastaa itse uimisesta. Noudata aina rannan paikallisia lippuja, uimakieltoja ja hengenpelastajien ohjeita. Mallin lämpötila voi poiketa rannan todellisesta lämpötilasta.</p>`
+}};
+const L_ = () => I18N[LANG];
+const QC = {E:"#1f78c8",G:"#2fa35b",S:"#e3b505",P:"#d64545",N:"#9aa4ab","-":"#d7dcdf"};
+const REG = {eu:[[35,-10.5],[65,31]], metro:[[41.2,-5.3],[51.2,9.7]],corse:[[41.3,8.4],[43.1,9.7]],riviera:[[42.9,5.2],[43.9,7.6]],atl:[[43.3,-4.6],[48.0,-0.8]],manche:[[48.4,-5],[51.1,2.6]],guad:[[15.8,-61.9],[16.6,-61.0]],mart:[[14.35,-61.25],[14.9,-60.8]],stm:[[17.85,-63.2],[18.15,-62.75]],reu:[[-21.4,55.2],[-20.85,55.85]],may:[[-13.05,45.0],[-12.6,45.3]],guy:[[4.5,-53.6],[5.8,-51.9]],
+  hki:[[60.05,24.55],[60.35,25.3]], tre:[[61.35,23.4],[61.7,24.1]], lake:[[61.0,25.5],[63.3,30.5]],
+  canarias:[[27.6,-18.2],[29.5,-13.3]], baleares:[[38.6,1.1],[40.1,4.4]], costasol:[[36.2,-5.4],[36.9,-3.5]], sicilia:[[36.6,12.3],[38.4,15.7]], sardegna:[[38.8,8.1],[41.3,9.9]],
+  algarve:[[36.9,-9.0],[37.3,-7.3]], madeira:[[32.6,-17.3],[33.1,-16.2]], azores:[[36.9,-31.3],[39.8,-25.0]], crete:[[34.8,23.4],[35.7,26.4]]};
+const SUBREG = {FR:["corse","riviera","atl","manche","guad","mart","stm","reu","may","guy"], FI:["hki","tre","lake"], ES:["canarias","baleares","costasol"], IT:["sicilia","sardegna"], PT:["algarve","madeira","azores"], EL:["crete"]};
+const COUNTRY_BOUNDS = {FR:REG.metro, ES:[[35.9,-9.4],[43.8,4.4]], PT:[[36.9,-9.6],[42.2,-6.1]]};
+let COUNTRIES = [];
+const cname = cc => { try { return new Intl.DisplayNames([LANG],{type:"region"}).of(cc==="EL"?"GR":cc); } catch(e){ return cc; } };
+function countryBounds(){   // 1–99 % -persentiilit, ettei yksittäinen kaukainen saari venytä näkymää
+  const by={}; S.forEach(s=>{ (by[s[10]]=by[s[10]]||[]).push(s); });
+  COUNTRIES = Object.keys(by);
+  for(const cc of COUNTRIES){ if(COUNTRY_BOUNDS[cc]) { REG["c_"+cc]=COUNTRY_BOUNDS[cc]; continue; }
+    const la=by[cc].map(s=>s[4]).sort((a,b)=>a-b), lo=by[cc].map(s=>s[5]).sort((a,b)=>a-b), q=(a,p)=>a[Math.min(a.length-1,Math.floor(p*a.length))];
+    REG["c_"+cc]=[[q(la,.01)-.1,q(lo,.01)-.1],[q(la,.99)+.1,q(lo,.99)+.1]]; }
+}
+const WX = s => { if(!s) return "·"; s=s.replace(/_(day|night|polartwilight)$/,"");
+  if(s.includes("thunder")) return "⛈️"; if(s.includes("snow")||s.includes("sleet")) return "🌨️";
+  if(s.includes("heavyrain")||s==="rain") return "🌧️"; if(s.includes("rain")) return "🌦️";
+  if(s==="fog") return "🌫️"; if(s==="cloudy") return "☁️"; if(s==="partlycloudy") return "⛅"; if(s==="fair") return "🌤️"; if(s==="clearsky") return "☀️"; return "☁️"; };
+const TB = [[6,"#1d2f6f"],[10,"#2b4c9b"],[14,"#2f7fc1"],[18,"#33a6b8"],[21,"#55b77a"],[24,"#e5b62a"],[27,"#ec8a2c"],[99,"#d9542f"]];
+const tempColor = t => t==null? "#c3cacf" : TB.find(([lim])=>t<lim)[1];
+const TBANDS = [["<6",TB[0][1]],["6–10",TB[1][1]],["10–14",TB[2][1]],["14–18",TB[3][1]],["18–21",TB[4][1]],["21–24",TB[5][1]],["24–27",TB[6][1]],["27+",TB[7][1]]];
+const nf = (x,d=1) => LANG==="fi" ? x.toFixed(d).replace(".",",") : x.toFixed(d);
+const D = iso => new Date(iso+"T12:00:00");
+let UNIT = store.get("bwt_unit") || (/^en-(US|LR|MM)$/i.test(navigator.language||"") ? "F" : "C");
+const U = () => UNIT==="F" ? "°F" : "°C";
+const cv = c => UNIT==="F" ? c*9/5+32 : c;
+const tv = (c,d) => { if(d==null) d = UNIT==="F"?0:1; return nf(cv(c), d); };
+const t0 = c => Math.round(cv(c));
+const wind = ms => UNIT==="F" ? `${Math.round(ms*2.237)} mph` : `${ms} m/s`;
+const unitSw = () => `<span class="usw" role="group" aria-label="Unit"><button data-u="C" class="${UNIT==="C"?"on":""}">°C</button><button data-u="F" class="${UNIT==="F"?"on":""}">°F</button></span>`;
+function bindUnit(root){ root.querySelectorAll("[data-u]").forEach(b=>b.onclick=e=>{ e.stopPropagation(); if(UNIT===b.dataset.u) return; UNIT=b.dataset.u; store.set("bwt_unit",UNIT); applyLang(); legend(lastN); if(current>=0) openSheet(current,false); if(typeof nearRefresh==="function") nearRefresh(); }); }
+let lastN = 0;
+const fmtD = iso => LANG==="fi" ? D(iso).getDate()+"."+(D(iso).getMonth()+1)+"." : D(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+const fmtDL = iso => LANG==="fi" ? D(iso).getDate()+"."+(D(iso).getMonth()+1)+"."+D(iso).getFullYear() : D(iso).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"});
+const isoLocal = d => d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const TODAY = isoLocal(new Date()), TOMORROW = isoLocal(new Date(Date.now()+864e5));
+const dayLbl = iso => iso===TODAY?L_().today: iso===TOMORROW?L_().tomorrow: L_().dow[D(iso).getDay()]+" "+fmtD(iso);
+let D0 = 0;   // tämän päivän indeksi lämpötilaennusteessa
+const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const title = s => s.toLowerCase().replace(/(^|[\s\-'(/])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
+
+let S=[], T=null, markers=[], mode="q", day=0, filt={exc:false,sea:false,fresh:false}, current=-1, sat=false, baseLayer=null;
+const map = L.map("map",{zoomControl:false,preferCanvas:true,minZoom:3,maxZoom:12,attributionControl:true,worldCopyJump:false});
+map.attributionControl.setPrefix(false).addAttribution("Natural Earth · EEA · Copernicus Marine · Syke · MET Norway · data.gouv.fr");
+const rend = L.canvas({padding:.3,tolerance:9});
+map.createPane("base"); map.getPane("base").style.zIndex = 250;   // vektoripohjakartta aina pallojen alla
+const baseRend = L.canvas({pane:"base", padding:.3});
+map.fitBounds(REG.eu);
+
+// lämpötila: meri (malli, päiväkohtainen) tai järvi (viimeisin havainto)
+function tempOf(i, d=day){ const x=T.sst[i]; if(x) return x[0][d]; const l=T.lake[i]; return l? l[0][l[0].length-1][1] : null; }
+
+function applyLang(){
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-t]").forEach(el=>{ el.textContent = String(L_()[el.dataset.t]).replace("°C",U()); });
+  document.getElementById("q").placeholder = L_().search;
+  document.getElementById("langBtn").textContent = LANG==="en" ? "FI" : "EN";
+  document.getElementById("warmLink").href = LANG==="fi" ? "/fi/lammin-meri-nyt/" : "/warm-sea-now/";
+  document.getElementById("cLink").href = LANG==="fi" ? "/fi/beaches/" : "/beaches/";
+  document.getElementById("avantoLink").style.display = LANG==="fi" ? "" : "none";
+  document.getElementById("modalBody").innerHTML = L_().info;
+  if(typeof satLabel==="function") try{ satLabel(); }catch(e){}
+  document.getElementById("locTxt").textContent = L_().near;
+  buildRegions();
+  if(T){ stamp(); restyle(); if(current>=0) openSheet(current,false); }
+}
+function buildRegions(){
+  const sel = document.getElementById("region"), v = sel.value || "eu", r=L_().reg;
+  const cs = COUNTRIES.slice().sort((a,b)=>cname(a).localeCompare(cname(b), LANG));
+  sel.innerHTML = `<option value="eu">${r.eu}</option>` + cs.map(cc => !SUBREG[cc] ? `<option value="c_${cc}">${cname(cc)}</option>`
+     : `<optgroup label="${cname(cc)}"><option value="c_${cc}">${cname(cc)} – ${r.whole}</option>`+SUBREG[cc].map(k=>`<option value="${k}">${r[k]}</option>`).join("")+`</optgroup>`).join("");
+  sel.value = [...sel.options].some(o=>o.value===v) ? v : "eu";
+}
+function sampleVerdict(s, smp){
+  if(!smp) return null; const num=x=>x==null?null:parseFloat(String(x).replace("<",""));
+  const ec=num(smp[1]), ei=num(smp[2]); if(ec==null&&ei==null) return null;
+  const sea = s[3]==="C"||s[3]==="T"; const lim = sea?[1000,370]:[1800,660];
+  if((ec??0)>lim[0]||(ei??0)>lim[1]) return {t:L_().sv.bad,c:"#d64545"};
+  if((ec??0)<=100&&(ei??0)<=100) return {t:L_().sv.good,c:"#2fa35b"};
+  return {t:L_().sv.avg,c:"#e3b505"};
+}
+function waterWord(t){ if(t==null) return null; const w=L_().ww;
+  return t>=24?w[5]: t>=20?w[4]: t>=17?w[3]: t>=14?w[2]: t>=8?w[1]: w[0]; }
+function radius(){ const z=map.getZoom(); return (z<=4?2.2: z<=5?2.6: z<=6?3.4: z<=8?4.6: z<=10?6: z<=13?7.5: 9) + (sat?1:0); }
+function visible(i){ const s=S[i];
+  if(filt.exc && s[6][0]!=="E") return false;
+  const sea = s[3]==="C"||s[3]==="T";
+  if(filt.sea && !filt.fresh && !sea) return false;
+  if(filt.fresh && !filt.sea && sea) return false;
+  return true; }
+function colorOf(i){ return mode==="q" ? QC[S[i][6][0]] : tempColor(tempOf(i)); }
+function restyle(){
+  const r=radius(); let n=0;
+  markers.forEach((m,i)=>{ const v=visible(i); if(v) n++;
+    const noTemp = mode==="t" && tempOf(i)==null;
+    m.setStyle({radius: noTemp? r*0.6 : r, fillColor: colorOf(i), color: i===current? (sat?"#ffeb3b":"#14232e"):"#ffffff", weight: i===current?3:(sat?2:1), opacity: v?1:0, fillOpacity: v?(noTemp?.55:.95):0});
+    if(i===current && v) m.bringToFront(); });
+  legend(n);
+}
+function placeLayerBtn(){ const lg=document.getElementById("legend"), b=document.getElementById("satBtn");
+  const wide = window.innerWidth>=760, base = wide ? 22 : lg.offsetHeight+30; b.style.bottom = base+"px";
+  const lb=document.getElementById("locBtn"); if(lb) lb.style.bottom = (base+52)+"px"; }
+window.addEventListener("resize", placeLayerBtn);
+function legend(n){
+  lastN=n;
+  const el=document.getElementById("legend"), t=L_(), cnt=`<span class="count">${n.toLocaleString(LANG==="fi"?"fi-FI":"en-GB")} ${t.beaches}</span>`;
+  if(mode==="q"){
+    el.innerHTML = `<div class="ttl">${t.legQ} ${cnt}</div><div class="row">`+
+      ["E","G","S","P","N"].map(k=>`<span class="it"><span class="dot" style="background:${QC[k]}"></span>${t.q[k]}</span>`).join("")+`</div>`;
+  } else {
+    el.innerHTML = `<div class="ttl">${t.legT.replace("°C",U())} ${cnt} ${unitSw()}</div><div class="row">`+
+      TBANDS.map(([l,c],k)=>[UNIT==="F"? (k===0?"<"+t0(6):k===7?t0(27)+"+":t0(TB[k-1][0])+"–"+t0(TB[k][0])) : l, c]).map(([l,c])=>`<span class="it"><span class="dot" style="background:${c}"></span>${l}</span>`).join("")+
+      `<span class="it"><span class="dot" style="background:#c3cacf;width:7px;height:7px"></span>${t.noTemp}</span></div><div class="days">`+
+      T.sst_dates.map((d,i)=>i<D0?"":`<button data-d="${i}" class="${i===day?"on":""}">${dayLbl(d)}</button>`).join("")+`</div>`;
+    bindUnit(el);
+    el.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{day=+b.dataset.d; restyle(); if(current>=0) openSheet(current,false);});
+  }
+  placeLayerBtn();
+}
+function bars(vals, labels, hi){
+  const mn=Math.min(...vals)-1.5, mx=Math.max(...vals)+.5;
+  return `<div class="bars">`+vals.map((t,k)=>`<div class="b"><em>${tv(t)}</em><i style="height:${Math.max(8,(t-mn)/(mx-mn||1)*60)}px;background:${tempColor(t)};${k===hi?"outline:2px solid #14232e;outline-offset:1px":""}"></i><span>${labels[k]}</span></div>`).join("")+`</div>`;
+}
+function openSheet(i, pan=true){
+  current=i; const t=L_(), s=S[i], x=T.sst[i], lk=T.lake[i], wxi=T.wx_cell[i], wx = wxi!=null? T.wx[wxi]: null;
+  document.getElementById("shName").textContent = title(s[1]);
+  document.getElementById("shMeta").textContent = [s[2], t.type[s[3]], cname(s[10])].filter(Boolean).join(" · ");
+  const wxNow = wx? wx.filter(r=>r[0]>=TODAY) : null, qk=s[6][0], qn=t.q[qk], tNow=tempOf(i,D0), w0=wxNow&&wxNow.length?wxNow[0]:null;
+  const air = w0? t.airNow(t0(w0[1]), WX(w0[5]), wind(w0[3])) : "";
+  let h="";
+  const qtxt = qk==="E"||qk==="G" ? t.qGood(qn) : qk==="P" ? t.qPoor : t.qOther(qn);
+  if(tNow!=null){
+    h+=`<div class="today" style="background:${tempColor(tNow)}1f"><div class="big">${t0(tNow)}<small>${unitSw()}</small></div><div class="txt"><b>${waterWord(tNow)}</b>${!x&&lk?t.measured(fmtD(lk[0][lk[0].length-1][0])):""}${qtxt}${air}</div></div>`;
+  } else {
+    h+=`<div class="today" style="background:#f1f4f6"><div class="txt"><b>${qn} (EU 2025)</b>${t.noTempYet}${air}</div></div>`;
+  }
+  const yrs=[2025,2024,2023,2022,2021];
+  h+=`<div class="sec"><h3>${t.secQ}</h3><div class="qrow"><span class="badge" style="background:${QC[qk]}">${qn}</span><div class="hist">`+
+     yrs.map((y,k)=>`<span><i style="background:${QC[s[6][k]]||"#d7dcdf"}" title="${y}: ${t.q[s[6][k]]||""}"></i>${String(y).slice(2)}</span>`).reverse().join("")+
+     `</div></div><div class="note">${t.qNote}</div></div>`;
+  const smp=s[8], v=sampleVerdict(s,smp);
+  h+=`<div class="sec"><h3>${t.secS}</h3>`;
+  if(smp){
+    const fv = x => String(x??"–").replace("<","< ");
+    h+=`<dl class="kv"><dt>${t.sDate}</dt><dd>${fmtDL(smp[0])} ${v?`<span class="pill" style="background:${v.c}22;color:${v.c}">${v.t}</span>`:""}</dd>`+
+       `<dt>${t.sEc}</dt><dd>${fv(smp[1])} <span class="count">${t.per}</span></dd><dt>${t.sEi}</dt><dd>${fv(smp[2])} <span class="count">${t.per}</span></dd></dl>`+
+       `<div class="note">${t.sNoteFR}</div>`;
+  } else h+=`<div class="note">${s[10]==="FI"?t.sNoneFI:t.sNone}</div>`;
+  if(s[9]){ h+=`<div class="sec" style="margin-top:10px"><h3>${t.secEv}</h3><div class="events">`+
+     Object.entries(s[9]).map(([k,n])=>`<span>${t.ev[k]||k}${n>1?` ×${n}`:""}</span>`).join("")+`</div></div>`; }
+  h+=`</div>`;
+  if(x){
+    h+=`<div class="sec"><h3>${t.secSst}</h3>`+bars(x[0].slice(D0), T.sst_dates.slice(D0).map(d=>dayLbl(d)), day-D0)+`<div class="note">${t.sstNote(nf(x[1]))}</div></div>`;
+  } else if(lk){
+    h+=`<div class="sec"><h3>${t.secLake}</h3>`+bars(lk[0].map(o=>o[1]), lk[0].map(o=>fmtD(o[0])), lk[0].length-1)+`<div class="note">${t.lakeNote(esc(lk[1]), nf(lk[2]))}</div></div>`;
+  }
+  if(wxNow&&wxNow.length){
+    h+=`<div class="sec"><h3>${t.secWx}</h3><div class="wx" style="grid-template-columns:repeat(${wxNow.length},1fr)">`+
+       wxNow.map((r,k)=>`<div><span>${r[0]===TODAY?t.today:t.dow[D(r[0]).getDay()]}</span><span class="ic">${WX(r[5])}</span><b>${t0(r[1])}°</b><div class="w">${wind(r[3])}${r[4]>=0.5?`<br>${r[4].toFixed(0)} mm`:""}</div></div>`).join("")+`</div></div>`;
+  }
+  if(s[7]){ const url = /^https?:/i.test(s[7]) ? s[7] : (s[10]==="FR" ? "https://baignades.sante.gouv.fr/baignades/profil.do?"+s[7] : "https://"+s[7]);
+    h+=`<div class="sec links"><a href="${esc(url)}" target="_blank" rel="noopener">${t.profile}</a></div>`; }
+  h+=`<div class="disc">${t.disc}</div>`;
+  document.getElementById("shBody").innerHTML=h;
+  bindUnit(document.getElementById("shBody"));
+  if(pan) document.getElementById("shBody").scrollTop=0;
+  document.getElementById("shShare").style.display=""; document.getElementById("sheet").style.maxHeight="";
+  setUrl(i); document.title = title(s[1]) + (s[2] ? ", " + s[2] : "") + " – Where to Swim";
+  const sh=document.getElementById("sheet"); sh.classList.add("open"); sh.setAttribute("aria-hidden","false");
+  restyle();
+  if(pan){ const ll=L.latLng(s[4],s[5]); const z=Math.max(map.getZoom(), sat?15:10);
+    const off = window.innerWidth<760 ? map.getSize().y*0.22 : 0;
+    const p = map.project(ll,z).add([window.innerWidth>=760?200:0, off]); map.flyTo(map.unproject(p,z), z, {duration:.6}); }
+}
+function closeSheet(){ const sh=document.getElementById("sheet"); sh.classList.remove("open"); sh.setAttribute("aria-hidden","true"); current=-1; restyle(); setUrl(null); }
+const slug = s => s.normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+function beachUrl(i){ const s=S[i]; return location.origin + "/beach/" + encodeURIComponent(s[0]) + "/" + slug(title(s[1]) + (s[2] ? " " + s[2] : "")); }
+function setUrl(i){ try { history.replaceState(null, "", i==null ? "/" : "/?b=" + encodeURIComponent(S[i][0])); } catch(e){} }
+// Oma sijainti ja lähimmät uimapaikat
+let me=null, meLayer=null, nearSort="dist", AV=null;
+const nearRefresh = () => { const sh=document.getElementById("sheet"); if(me && current<0 && sh.classList.contains("open")) showNear(); };
+function hav(a,b,c,d){ const R=6371, r=Math.PI/180, x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2; return 2*R*Math.asin(Math.sqrt(x)); }
+function showNear(){
+  const t=L_(); if(!me) return;
+  const sh0=document.getElementById("sheet"); sh0.style.maxHeight = window.innerWidth<760 ? "55vh" : "";
+  if(nearSort==="av"){ return showAvanto(); }
+  let near=[]; for(let i=0;i<S.length;i++){ if(!visible(i)) continue; const d=hav(me[0],me[1],S[i][4],S[i][5]); if(d<=100) near.push([i,d]); }
+  near.sort((a,b)=>a[1]-b[1]); near=near.slice(0,40);
+  const QR={E:0,G:1,S:2,P:3,N:4,"-":5};
+  if(nearSort==="warm") near.sort((a,b)=>(tempOf(b[0],D0)??-99)-(tempOf(a[0],D0)??-99));
+  if(nearSort==="best") near.sort((a,b)=>(QR[S[a[0]][6][0]]-QR[S[b[0]][6][0]])||a[1]-b[1]);
+  near=near.slice(0,15);
+  current=-1; document.getElementById("shShare").style.display="none";
+  document.getElementById("shName").textContent=t.nearTitle; document.getElementById("shMeta").textContent="";
+  let h=segHtml();
+  h+= near.length ? `<ul class="nlist">`+near.map(([i,d])=>{ const s=S[i], tt=tempOf(i,D0);
+      return `<li><button data-i="${i}"><span class="dot" style="background:${QC[s[6][0]]}"></span><span class="nm"><b>${esc(title(s[1]))}</b><span>${esc([s[2], t.type[s[3]]].filter(Boolean).join(" · "))} · ${nf(d, d<10?1:0)} ${t.km}</span></span><span class="tt" style="color:${tempColor(tt)}">${tt!=null?t0(tt)+" "+U():"–"}</span></button></li>`; }).join("")+`</ul>`
+    : `<p class="note">${t.noneNear}</p>`;
+  h+=`<div class="disc">${t.disc}</div>`;
+  const body=document.getElementById("shBody"); body.innerHTML=h; body.scrollTop=0;
+  body.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{ nearSort=b.dataset.s; showNear(); });
+  body.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{ document.getElementById("shShare").style.display=""; openSheet(+b.dataset.i); });
+  const sh=document.getElementById("sheet"); sh.classList.add("open"); sh.setAttribute("aria-hidden","false"); restyle();
+}
+function segHtml(){ const t=L_(); const opts=[["dist",t.sortDist],["warm",t.sortWarm],["best",t.sortBest]];
+  if(me && me[0]>59.5 && me[0]<70.2 && me[1]>19 && me[1]<31.6) opts.push(["av",t.sortAv]);   // avannot vain Suomessa
+  return `<div class="seg2" style="flex-wrap:wrap">${opts.map(([k,l])=>`<button data-s="${k}" class="${nearSort===k?"on":""}">${l}</button>`).join("")}</div>`; }
+async function showAvanto(){
+  const t=L_(), body=document.getElementById("shBody");
+  if(!AV){ try{ AV = await (await fetch("/data/avanto.json")).json(); }catch(e){ AV=[]; } }
+  const near = AV.map(a=>[a, hav(me[0],me[1],a[4],a[5])]).sort((x,y)=>x[1]-y[1]).slice(0,15);
+  let h=segHtml()+`<ul class="nlist">`+near.map(([a,d])=>`<li><a href="/fi/avanto/${a[3]}/#p${a[0]}" style="display:flex;align-items:center;gap:10px;padding:11px 2px;color:var(--ink);text-decoration:none">
+     <span style="font-size:18px">❄️</span><span class="nm"><b>${esc(a[1])}</b><span>${esc(a[2])} · ${nf(d, d<10?1:0)} ${t.km}${a[6]?" · "+t.sauna:""}</span></span>
+     <span class="tt" style="color:${tempColor(a[7])}">${a[7]!=null?tv(a[7])+" "+U():""}</span></a></li>`).join("")+`</ul>`;
+  h+=`<p class="note">Lipas.fi (Jyväskylän yliopisto, CC BY 4.0)</p>`;
+  body.innerHTML=h; body.scrollTop=0;
+  body.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{ nearSort=b.dataset.s; showNear(); });
+  current=-1; document.getElementById("shShare").style.display="none";
+  document.getElementById("shName").textContent=t.sortAv.replace("❄️ ",""); document.getElementById("shMeta").textContent="";
+  const sh=document.getElementById("sheet"); sh.classList.add("open"); sh.setAttribute("aria-hidden","false");
+}
+function locate(){
+  const t=L_(), btn=document.getElementById("locBtn");
+  if(!navigator.geolocation){ toast(t.locNo); return; }
+  btn.classList.add("busy");
+  navigator.geolocation.getCurrentPosition(pos=>{
+    btn.classList.remove("busy"); me=[pos.coords.latitude, pos.coords.longitude];
+    if(meLayer) map.removeLayer(meLayer);
+    meLayer=L.layerGroup([
+      L.circle(me,{radius:Math.min(pos.coords.accuracy,2000),color:"#14232e",weight:1,fillColor:"#14232e",fillOpacity:.06,interactive:false}),
+      L.circleMarker(me,{radius:14,stroke:false,fillColor:"#14232e",fillOpacity:.18,interactive:false}),
+      L.circleMarker(me,{radius:8,color:"#fff",weight:3,fillColor:"#14232e",fillOpacity:1,interactive:false})]).addTo(map);
+    const near=S.map((s,i)=>[i,hav(me[0],me[1],s[4],s[5])]).filter(x=>visible(x[0])).sort((a,b)=>a[1]-b[1]).slice(0,5);
+    const pts=[me, ...near.filter(x=>x[1]<60).map(x=>[S[x[0]][4],S[x[0]][5]])];
+    if(pts.length>1) map.fitBounds(L.latLngBounds(pts).pad(.3),{maxZoom:13, paddingBottomRight:[0, window.innerWidth<760? map.getSize().y*0.55:0]}); else map.setView(me,10);
+    showNear();
+  }, ()=>{ btn.classList.remove("busy"); toast(t.locErr); }, {enableHighAccuracy:false, timeout:12000, maximumAge:300000});
+}
+document.getElementById("locBtn").onclick=locate;
+function toast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("on"); setTimeout(()=>t.classList.remove("on"), 1800); }
+document.getElementById("shShare").onclick = async () => {
+  if(current<0) return; const s=S[current], t=L_(), url=beachUrl(current);
+  const text = t.shareText(title(s[1]) + (s[2] ? ", " + s[2] : ""), tempOf(current,D0), t.q[s[6][0]]);
+  if(navigator.share){ try { await navigator.share({title: title(s[1]) + " – Where to Swim", text, url}); return; } catch(e){ if(e && e.name==="AbortError") return; } }
+  try { await navigator.clipboard.writeText(text + " " + url); toast(t.copied); } catch(e){ toast(url); }
+};
+function stamp(){ const f=new Date(T.wx_fetched), loc=LANG==="fi"?"fi-FI":"en-GB";
+  document.getElementById("stamp").textContent = L_().stamp(f.toLocaleDateString(loc), f.toLocaleTimeString(loc,{hour:"2-digit",minute:"2-digit"}), fmtD(T.sst_dates[0]), fmtD(T.sst_dates[T.sst_dates.length-1])); }
+
+// Haku
+const qi=document.getElementById("q"), res=document.getElementById("results");
+let norm=[], normName=[], normCom=[];
+const N = s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+qi.addEventListener("input",()=>{
+  const v=N(qi.value.trim()); if(v.length<2){res.style.display="none";return;}
+  const score=i=> normCom[i]===v?0 : normCom[i].startsWith(v)?1 : normName[i].startsWith(v)?2 : (" "+normName[i]).includes(" "+v)?3 : 4;
+  const hits=[]; for(let i=0;i<S.length;i++){ if(norm[i].includes(v)) hits.push(i); }
+  hits.sort((a,b)=>score(a)-score(b));
+  const t=L_();
+  res.innerHTML = hits.slice(0,10).map(i=>{ const tt=tempOf(i,D0); return `<button data-i="${i}"><span class="dot" style="background:${QC[S[i][6][0]]}"></span><span>${esc(title(S[i][1]))}<div class="sub">${[S[i][2], cname(S[i][10]), t.type[S[i][3]]].filter(Boolean).map(esc).join(" · ")}${tt!=null?` · ${t0(tt)} ${U()}`:""}</div></span></button>`; }).join("") || `<button disabled><span class="sub">${t.none}</span></button>`;
+  res.style.display="block";
+  res.querySelectorAll("[data-i]").forEach(b=>b.onclick=()=>{res.style.display="none"; qi.blur(); openSheet(+b.dataset.i);});
+});
+qi.addEventListener("blur",()=>setTimeout(()=>res.style.display="none",200));
+
+document.querySelectorAll("#mode button").forEach(b=>b.onclick=()=>{ mode=b.dataset.m; document.querySelectorAll("#mode button").forEach(x=>x.classList.toggle("on",x===b)); restyle(); });
+document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{ filt[b.dataset.f]=!filt[b.dataset.f]; b.classList.toggle("on",filt[b.dataset.f]); restyle(); });
+document.getElementById("region").onchange=e=>{ closeSheet(); map.flyToBounds(REG[e.target.value],{duration:.7,padding:[10,10],maxZoom:10}); };
+document.getElementById("shX").onclick=closeSheet;
+document.getElementById("langBtn").onclick=()=>{ LANG = LANG==="en"?"fi":"en"; store.set("bwt_lang",LANG); applyLang(); };
+const modal=document.getElementById("modal");
+document.getElementById("infoBtn").onclick=()=>modal.classList.add("open");
+document.getElementById("modalX").onclick=()=>modal.classList.remove("open");
+modal.onclick=e=>{ if(e.target===modal) modal.classList.remove("open"); };
+const notice=document.getElementById("notice");
+if(store.get("bwt_notice")==="1") notice.style.display="none";
+document.getElementById("noticeX").onclick=()=>{ notice.style.display="none"; store.set("bwt_notice","1"); };
+map.on("zoomend",restyle);
+// Satelliittikuva: Esri World Imagery + paikannimet. Tuotannossa tähän tarvitaan ArcGIS Location Platformin API-avain.
+const SAT_ATTR = "Imagery © Esri, Maxar, Earthstar Geographics";
+const satLayer = L.layerGroup([
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {maxZoom:18, maxNativeZoom:18, attribution:SAT_ATTR}),
+  L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}", {maxZoom:18, maxNativeZoom:18, opacity:.9})
+]);
+function setSat(on){
+  sat = on; satLabel(); store.set("bwt_sat", on?"1":"0");
+  if(on){ if(baseLayer) map.removeLayer(baseLayer); satLayer.addTo(map); map.setMaxZoom(18); document.getElementById("map").style.background="#0b1d2a"; }
+  else { map.removeLayer(satLayer); if(baseLayer) baseLayer.addTo(map); if(map.getZoom()>12) map.setZoom(12); map.setMaxZoom(12); document.getElementById("map").style.background=""; }
+  satLayer.eachLayer(l=>l.bringToBack && l.bringToBack()); restyle();
+}
+document.getElementById("satBtn").onclick=()=>setSat(!sat);
+function satLabel(){ document.getElementById("satBtn").innerHTML = sat ? `<span class="ic">🗺️</span>${L_().mapv}` : `<span class="ic">🛰️</span>${L_().sat}`; }
+map.on("click",()=>{ if(current>=0) closeSheet(); });
+applyLang();
+document.getElementById("loading").textContent = L_().loading;
+
+Promise.all(["/data/basemap.json","/data/sites.json","/data/today.json"].map(u=>fetch(u).then(r=>{if(!r.ok) throw new Error(u); return r.json();})))
+.then(([bm,sites,today])=>{
+  S=sites; T=today; normName=S.map(s=>N(s[1])); normCom=S.map(s=>N(s[2])); norm=S.map((s,i)=>normName[i]+" "+normCom[i]);
+  baseLayer = L.geoJSON(bm,{interactive:false, renderer:baseRend, pane:"base",style:f=> f.properties.k==="lake" ? {stroke:false,fillColor:"#d5e9f3",fillOpacity:1}
+       : {color:"#c9c2b3",weight:.7,fillColor:f.properties.c?"#f6f3ec":"#ece8df",fillOpacity:1}});
+  if(store.get("bwt_sat")==="1") setSat(true); else baseLayer.addTo(map);
+  markers = S.map((s,i)=>L.circleMarker([s[4],s[5]],{renderer:rend,radius:radius(),weight:1,color:"#fff",fillOpacity:.95,fillColor:colorOf(i)})
+      .on("click",e=>{ L.DomEvent.stopPropagation(e); openSheet(i); }).addTo(map));
+  countryBounds(); buildRegions();
+  D0 = Math.max(0, T.sst_dates.indexOf(TODAY)); day = D0;
+  if(TODAY > T.sst_dates[T.sst_dates.length-1] || T.sst_dates.indexOf(TODAY) < 0){   // data vanhentunut
+    const n=document.getElementById("notice"); n.style.display=""; n.querySelector("span").textContent = L_().stale(fmtDL(T.wx_fetched.slice(0,10))); }
+  restyle(); stamp();
+  document.getElementById("loading").remove();
+  // syvälinkki: /?b=ID tai /beach/ID/nimi
+  const m = location.pathname.match(/^\/beach\/([^/]+)/), want = m ? decodeURIComponent(m[1]) : new URLSearchParams(location.search).get("b");
+  if(want){ const i = S.findIndex(s=>s[0]===want); if(i>=0){ map.setView([S[i][4],S[i][5]], sat?15:11); openSheet(i); } }
+}).catch(err=>{ document.getElementById("loading").textContent=L_().fail; console.error(err); });
+})();
+</script>
+</body>
+</html>
