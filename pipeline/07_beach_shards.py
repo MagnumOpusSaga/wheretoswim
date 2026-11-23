@@ -18,6 +18,13 @@ xyz = np.c_[np.cos(la) * np.cos(lo), np.cos(la) * np.sin(lo), np.sin(la)]
 d, nn = cKDTree(xyz).query(xyz, k=5)
 GD = 2   # ruudun koko asteina (2° → noin 215 tiedostoa; Pagesin raja 1000 tiedostoa)
 key = lambda s: f"{int(np.floor(s[4]/GD))*GD}_{int(np.floor(s[5]/GD))*GD}"
+# lähimmät lentoasemat (OurAirports, public domain): lähin + lähin iso kenttä, jos eri ja alle 150 km
+AP = json.load(open("data/airports.json"))
+ap_xyz = np.array([[np.cos(np.radians(r[3])) * np.cos(np.radians(r[4])), np.cos(np.radians(r[3])) * np.sin(np.radians(r[4])), np.sin(np.radians(r[3]))] for r in AP])
+ap_tree = cKDTree(ap_xyz)
+big = [i for i, r in enumerate(AP) if r[5] == "l"]; big_tree = cKDTree(ap_xyz[big])
+apd, api = ap_tree.query(xyz, k=1); bgd, bgi = big_tree.query(xyz, k=1)
+def chord_km(c): return round(float(2 * 6371 * np.arcsin(min(1.0, c / 2))))
 shards = {}
 for i, s in enumerate(S):
     k = key(s); sh = shards.setdefault(k, {"b": {}, "w": {}})
@@ -31,6 +38,12 @@ for i, s in enumerate(S):
     if T["sst"][i]: b["sst"] = T["sst"][i]
     if T["lake"][i]: b["lake"] = T["lake"][i]
     if wi is not None: b["wx"] = str(wi)
+    aps = [[AP[api[i]][0], chord_km(apd[i])]]
+    j = big[bgi[i]]
+    if j != api[i] and chord_km(bgd[i]) <= 150: aps.append([AP[j][0], chord_km(bgd[i])])
+    b["ap"] = aps
+    for code, _ in aps:
+        r = next(r for r in AP if r[0] == code); sh.setdefault("a", {})[code] = [r[1], r[2]]
     sh["b"][s[0]] = b
 import shutil; shutil.rmtree("site/data/g", ignore_errors=True); os.makedirs("site/data/g", exist_ok=True)
 for k, sh in shards.items():
@@ -80,6 +93,7 @@ for L in LANGS:
     p = f"/{L}" if L else ""
     if L: urls.append(f"{B}{p}/")
     urls.append(f"{B}{p}/beaches/")
+    urls.append(f"{B}{p}/flight-delay/")
     for c in countries: urls.append(f"{B}{p}/beaches/{c[1]}/")
     for (cc, sl) in sorted(towns):
         urls.append(f"{B}{p}/beaches/{slug(CNAME[cc])}/{sl}/")

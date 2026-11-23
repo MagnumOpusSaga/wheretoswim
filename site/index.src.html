@@ -557,7 +557,8 @@ function applyLang(){
   document.getElementById("warmLink").href = LANG==="fi" ? "/fi/lammin-meri-nyt/" : "/warm-sea-now/";
   document.getElementById("cLink").href = PFX()+"/beaches/";
   document.getElementById("avantoLink").style.display = LANG==="fi" ? "" : "none";
-  document.getElementById("modalBody").innerHTML = L_().info;
+  const PRIVL={en:"Privacy policy",fi:"Tietosuojaseloste",de:"Datenschutzerklärung",fr:"Politique de confidentialité",es:"Política de privacidad",it:"Informativa sulla privacy",nl:"Privacyverklaring"};
+  document.getElementById("modalBody").innerHTML = L_().info + `<p style="margin-top:10px"><a href="${PFX()}/privacy/">${PRIVL[LANG]}</a></p>`;
   if(typeof satLabel==="function") try{ satLabel(); }catch(e){}
   document.getElementById("locTxt").textContent = L_().near;
   buildRegions();

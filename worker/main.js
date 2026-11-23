@@ -1,6 +1,8 @@
 // Where to Swim – Pages advanced mode (_worker.js). Rantasivut, kaupunki- ja maasivut 7 kielellä + upotettava widget.
 // Data tulee saman julkaisun staattisista tiedostoista env.ASSETSin kautta.
 import { STR, EV_EN, EV, MAP } from "./i18n.js";
+import { BOX, GUIDE, GUIDE_AH, GUIDE_AH_BTN, PRIV } from "./guide.js";
+import { AFF } from "./affiliates.js";
 
 const SITE = "Where to Swim", HOST = "https://wheretoswimtoday.com";
 const LANGS = ["en", "fi", "de", "fr", "es", "it", "nl"];
@@ -29,6 +31,8 @@ const DN = {};
 const cname = (cc, l) => { try { DN[l] ??= new Intl.DisplayNames([LOC[l]], { type: "region" }); let n = DN[l].of(cc === "EL" ? "GR" : cc); if (l === "en" && cc === "NL") n = "the Netherlands"; return n; } catch (e) { return cc; } };
 const cnameBare = (cc, l) => cname(cc, l).replace(/^the /, "");
 const dayFmt = (iso, l) => new Date(iso + "T12:00:00Z").toLocaleDateString(LOC[l], { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
+// kumppanilinkki: aina merkintä + rel="sponsored nofollow"
+const affA = (href, text, l, cls = "") => `<a${cls ? ` class="${cls}"` : ""} href="${esc(href)}" rel="sponsored nofollow noopener" target="_blank">${text}</a> <small class="aff">${BOX[l].aff}</small>`;
 const COL = l => l === "fr" ? " :" : ":";
 const longDate = (iso, l) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString(LOC[l], { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Helsinki" }); };
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -75,6 +79,8 @@ td a{color:var(--ink);font-weight:600;text-decoration:none}td a:hover{color:var(
 ul.near{list-style:none;padding:0;margin:0;background:#fff;border-radius:12px}ul.near li{border-bottom:1px solid var(--line)}ul.near a{display:flex;justify-content:space-between;gap:10px;padding:10px 12px;color:var(--ink);text-decoration:none}ul.near a:hover{background:var(--soft)}
 ul.az{columns:3 200px;column-gap:18px;padding:0;margin:0;list-style:none;font-size:14.5px}ul.az li{break-inside:avoid;padding:2px 0}ul.az a{text-decoration:none}ul.az span{color:var(--muted);font-size:12.5px}
 .muted{font-size:13.5px}.disc{background:#fff;border-radius:12px;padding:12px 14px;font-size:13.5px;color:var(--muted);margin-top:22px}
+.getthere{background:#fff;border-radius:14px;padding:12px 14px;margin:0 0 18px;box-shadow:0 1px 0 var(--line)}.getthere h2{margin:0 0 6px;font-size:16px}.getthere ul{list-style:none;margin:0;padding:0}.getthere li{padding:5px 0;border-top:1px solid var(--line);font-size:14.5px}.getthere li:first-child{border-top:0}
+small.aff{font-size:11px;color:var(--muted);background:#f1f4f6;border-radius:6px;padding:1px 6px;white-space:nowrap}
 footer{max-width:820px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}footer a{color:var(--muted)}footer .langs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px}`;
 
 function page(l, { title: ttl, desc, path, alt = true, head = "", body, status = 200, noindex = false }) {
@@ -87,7 +93,7 @@ function page(l, { title: ttl, desc, path, alt = true, head = "", body, status =
 <meta property="og:url" content="${url}"><meta property="og:image" content="${HOST}/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0b6fa4">
 ${head}<style>${CSS}</style></head><body><header><div><a class="logo" href="/"><img src="/favicon.svg" alt="">${SITE}</a><nav><a href="${P(l)}/beaches/">${s.allCountries}</a><a href="${P(l)}/">${s.nav}</a></nav></div></header><main>${body}</main>
-<footer>${langs}${s.dataL}${COL(l)} European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), data.gouv.fr (Licence Ouverte), GeoNames (CC BY 4.0). · <a href="${P(l)}/embed/">${s.embedLink}</a> · <a href="/">wheretoswimtoday.com</a></footer>
+<footer>${langs}${s.dataL}${COL(l)} European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), data.gouv.fr (Licence Ouverte), GeoNames (CC BY 4.0). · <a href="${P(l)}/embed/">${s.embedLink}</a> · <a href="${P(l)}/flight-delay/">${BOX[l].guide.replace(/ ?→$/, "")}</a> · <a href="${P(l)}/privacy/">${PRIV[l].link}</a> · <a href="/">wheretoswimtoday.com</a></footer>
 </body></html>`, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=1800" } });
 }
 const ld = o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, "\\u003c")}</script>`;
@@ -128,6 +134,7 @@ async function beach(env, url, l, id) {
   h += `<div class="cards"><div class="card"><div class="k">${s.waterToday}</div><div class="v" style="color:${tempColor(tNow)}">${tNow != null ? nf(tNow, 0, l) + " °C" : "–"}</div>${tNow != null && l === "en" ? `<div class="x">${F(tNow)} °F</div>` : ""}<div class="x">${tNow != null ? (sst ? s.model : s.measured(dayFmt(lakeLast[0], l))) : s.notAvail}</div></div>
 <div class="card"><div class="k">${s.euQuality}</div><div class="v" style="color:${qc};font-size:21px;padding:4px 0">${q}</div><div class="x">${s.season}</div></div>
 <div class="card"><div class="k">${s.weatherToday}</div><div class="v">${w0 ? WX(w0[4]) + " " + w0[1] + "°" : "–"}</div><div class="x">${w0 ? s.wind + " " + w0[2] + " m/s" + (w0[3] ? ", " + w0[3] + " mm" : "") : ""}</div></div></div>`;
+  h += getThere(l, b, g);
   if (sst) {
     h += `<h2>${s.sstH}</h2><table><tr><th>${s.dayH}</th><th>${s.waterH}</th></tr>${sst.map((t, k) => `<tr><td>${k === 0 ? s.today : dayFmt(sstDates[k], l)}</td><td><span class="dot" style="background:${tempColor(t)}"></span>${TH(t, l, 1)}</td></tr>`).join("")}</table><p class="muted">${s.sstNote(nf(b.sst[1], 1, l))}</p>`;
   } else if (b.lake) {
@@ -194,6 +201,7 @@ async function country(env, url, l, csl) {
   if (ranked.length) h += `<h2>${s.warmestH}</h2><ul class="near">${ranked.map(([x, v]) => `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/"><span>${esc(x[1])}<span class="muted"> · ${s.beachesN(x[4].length)}</span></span><span><span class="dot" style="background:${tempColor(v)}"></span>${TH(v, l)}</span></a></li>`).join("")}</ul>`;
   const coll = new Intl.Collator(LOC[l]);
   const az = TW.t.slice().sort((a, b) => coll.compare(a[1], b[1]));
+  h += `<p><a href="${P(l)}/flight-delay/">✈️ ${BOX[l].guide}</a></p>`;
   h += `<h2>${s.allPlacesH}</h2><ul class="az">${az.map(x => `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/">${esc(x[1])}</a> <span>${x[4].length}</span></li>`).join("")}</ul>`;
   h += `<div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>`;
   const head = crumbLd(crumbs);
@@ -279,6 +287,40 @@ document.getElementById("cp").onclick=async()=>{ if(!sel) return; try{ await nav
 }
 
 
+
+// ---------- "Perille pääsy" -laatikko ----------
+function getThere(l, b, g) {
+  if (!b.ap || !b.ap.length || !g.a) return "";
+  const x = BOX[l], [c0, km0] = b.ap[0], a0 = g.a[c0] || [c0, ""], city = a0[1] || a0[0];
+  let li = `<li>✈️ ${esc(x.ap(a0[0], c0, km0))}</li>`;
+  if (b.ap[1]) { const [c1, km1] = b.ap[1], a1 = g.a[c1] || [c1, ""]; li += `<li>✈️ ${esc(x.big(a1[0], c1, km1))}</li>`; }
+  li += AFF.flights
+    ? `<li>🔎 ${affA(AFF.flights.replace("{IATA}", c0), esc(x.flights(`${city} (${c0})`)), l)}</li>`
+    : `<li>🔎 <a href="https://www.google.com/travel/flights?q=${encodeURIComponent("Flights to " + c0)}" rel="nofollow noopener" target="_blank">${esc(x.flights(`${city} (${c0})`))}</a></li>`;
+  if (AFF.airhelp) li += `<li>⏱️ ${affA(AFF.airhelp, esc(x.delay), l)}</li>`;
+  li += `<li>📄 <a href="${P(l)}/flight-delay/">${x.guide}</a></li>`;
+  return `<section class="getthere"><h2>${x.h}</h2><ul>${li}</ul></section>`;
+}
+
+// ---------- lento-opas ----------
+function guidePage(url, l) {
+  const G = GUIDE[l], path = "/flight-delay/";
+  if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
+  const ah = AFF.airhelp ? `<h2>AirHelp</h2><p>${GUIDE_AH[l]}</p><p>${affA(AFF.airhelp, GUIDE_AH_BTN[l], l, "btn p")}</p>` : "";
+  const body = crumbHtml([[STR[l].home, P(l) + "/"], [G.h1, P(l) + path]]) + `<h1>${G.h1}</h1>` + G.html.replace("{AH}", ah)
+    + `<p><a href="${P(l)}/beaches/">${STR[l].allCountries} →</a></p>`;
+  const head = ld({ "@context": "https://schema.org", "@type": "Article", headline: G.h1, description: G.desc, inLanguage: l, url: HOST + P(l) + path,
+    publisher: { "@type": "Organization", name: SITE, url: HOST } }) + crumbLd([[STR[l].home, P(l) + "/"], [G.h1, P(l) + path]]);
+  return page(l, { title: G.title + " | " + SITE, desc: G.desc, path, head, body });
+}
+
+// ---------- tietosuojaseloste ----------
+function privacyPage(url, l) {
+  const path = "/privacy/";
+  if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
+  return page(l, { title: PRIV[l].title + " | " + SITE, desc: PRIV[l].title, path, body: PRIV[l].html(esc(AFF.contact)) });
+}
+
 // ---------- karttasivu kielittäin (/fi/, /de/ …) ----------
 async function mapPage(env, url, l) {
   let h = await asset(env, url.origin, "/", "text");
@@ -294,7 +336,7 @@ async function mapPage(env, url, l) {
 }
 
 // ---------- reititys ----------
-const DYN = /^\/(beach|beaches|embed)(\/|$)/;
+const DYN = /^\/(beach|beaches|embed|flight-delay|privacy)(\/|$)/;
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -315,6 +357,8 @@ export default {
       else if (/^\/beaches\/?$/.test(path)) res = await index(env, url, l);
       else if ((m = path.match(/^\/beaches\/([a-z0-9-]+)\/?$/))) res = await country(env, url, l, m[1]);
       else if ((m = path.match(/^\/beaches\/([a-z0-9-]+)\/([a-z0-9-]+)\/?$/))) res = await town(env, url, l, m[1], m[2]);
+      else if (/^\/flight-delay\/?$/.test(path)) res = guidePage(url, l);
+      else if (/^\/privacy\/?$/.test(path)) res = privacyPage(url, l);
       else if (/^\/embed\/?$/.test(path)) res = await embedPage(env, url, l);
       else if ((m = path.match(/^\/embed\/([^/]+)\/?$/))) res = await widget(env, url, LANGS.includes(wl) ? wl : l, decodeURIComponent(m[1]));
       else res = notFound(l);
