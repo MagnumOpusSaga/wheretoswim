@@ -12,16 +12,16 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="canonical" href="https://wheretoswimtoday.com/">
 <link rel="alternate" hreflang="en" href="https://wheretoswimtoday.com/"><link rel="alternate" hreflang="fi" href="https://wheretoswimtoday.com/fi/"><link rel="alternate" hreflang="de" href="https://wheretoswimtoday.com/de/"><link rel="alternate" hreflang="fr" href="https://wheretoswimtoday.com/fr/"><link rel="alternate" hreflang="es" href="https://wheretoswimtoday.com/es/"><link rel="alternate" hreflang="it" href="https://wheretoswimtoday.com/it/"><link rel="alternate" hreflang="nl" href="https://wheretoswimtoday.com/nl/"><link rel="alternate" hreflang="x-default" href="https://wheretoswimtoday.com/">
-<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0b6fa4">
+<link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0B63A8">
 <!-- Travelpayouts (affiliate + site verification) -->
 <script data-cfasync="false">(function(){var s=document.createElement("script");s.async=1;s.setAttribute("data-cmp-ab","2");s.src="https://emrldtp.com/NjA1NjU3.js?t=605657";document.head.appendChild(s);})();</script>
 <style>/*LEAFLET_CSS*/</style>
 <style>
 :root{
-  --sea:#d5e9f3; --land:#f6f3ec; --land2:#ece8df; --ink:#14232e; --muted:#5d6b75; --line:#e3e7ea;
-  --card:#ffffff; --accent:#0b6fa4; --accent-soft:#e3f1f8;
-  --q-E:#1f78c8; --q-G:#2fa35b; --q-S:#e3b505; --q-P:#d64545; --q-N:#9aa4ab;
-  --shadow:0 6px 24px rgba(20,35,46,.16);
+  --sea:#d5e9f3; --land:#f6f3ec; --land2:#ece8df; --ink:#0F2533; --muted:#6A5A45; --line:#E6DCCB;
+  --card:#ffffff; --accent:#0B63A8; --accent-soft:#E3F0FA; --sand:#FBF7F1; --chip:#EFE7DA;
+  --q-E:#0B63A8; --q-G:#6FA3D2; --q-S:#D9822B; --q-P:#8E2A12; --q-N:#9AA0A6;
+  --shadow:0 6px 24px rgba(15,37,51,.16);
   --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
 }
 *{box-sizing:border-box}
@@ -40,11 +40,11 @@ html,body{margin:0;height:100%;font-family:var(--font);color:var(--ink);backgrou
 .brand{font-weight:750;font-size:14px;letter-spacing:-.01em;white-space:nowrap}
 .brand small{display:block;font-weight:500;font-size:11px;color:var(--muted);letter-spacing:0}
 .search{flex:1;min-width:0;position:relative}
-.search input{width:100%;border:1px solid var(--line);background:#f7f9fa;border-radius:10px;padding:9px 10px;font-size:15px;font-family:inherit;color:var(--ink);outline:none}
+.search input{width:100%;border:1px solid var(--line);background:var(--sand);border-radius:10px;padding:9px 10px;font-size:15px;font-family:inherit;color:var(--ink);outline:none}
 .search input:focus{border-color:var(--accent);background:#fff}
-.usw{display:inline-flex;margin-left:6px;background:#eef2f4;border-radius:8px;padding:2px;vertical-align:middle}.usw button{border:0;background:none;font:600 11px/1 inherit;font-family:inherit;padding:4px 6px;border-radius:6px;color:var(--muted);cursor:pointer}.usw button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px #0002}.big small .usw{margin-left:4px}
+.usw{display:inline-flex;margin-left:6px;background:var(--chip);border-radius:8px;padding:2px;vertical-align:middle}.usw button{border:0;background:none;font:600 11px/1 inherit;font-family:inherit;padding:4px 6px;border-radius:6px;color:var(--muted);cursor:pointer}.usw button.on{background:#fff;color:var(--ink);box-shadow:0 1px 2px #0002}.big small .usw{margin-left:4px}
 .langwrap{position:relative;display:inline-flex;align-items:center;justify-content:center;font:700 13px/1 var(--font);cursor:pointer}.langwrap select{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer;font-size:16px}
-.iconbtn{border:0;background:#f1f4f6;border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer;flex:none;color:var(--ink)}
+.iconbtn{border:0;background:var(--chip);border-radius:10px;width:38px;height:38px;font-size:17px;cursor:pointer;flex:none;color:var(--ink)}
 .results{position:absolute;left:0;right:0;top:44px;background:#fff;border-radius:12px;box-shadow:var(--shadow);overflow:hidden;display:none;max-height:55vh;overflow-y:auto}
 .results button{display:flex;gap:10px;align-items:center;width:100%;text-align:left;border:0;background:#fff;padding:10px 12px;font:inherit;font-size:14px;cursor:pointer;border-bottom:1px solid var(--line)}
 .results button:hover{background:var(--accent-soft)}
@@ -58,7 +58,7 @@ html,body{margin:0;height:100%;font-family:var(--font);color:var(--ink);backgrou
 .seg{display:flex;background:var(--card);border-radius:999px;box-shadow:0 2px 8px rgba(20,35,46,.12);padding:3px;flex:none}
 .seg button{border:0;background:transparent;border-radius:999px;padding:5px 11px;font:inherit;font-size:13px;font-weight:650;color:var(--muted);cursor:pointer}
 .seg button.on{background:var(--accent);color:#fff}
-select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;background-image:linear-gradient(45deg,transparent 50%,#5d6b75 50%),linear-gradient(135deg,#5d6b75 50%,transparent 50%);background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;background-size:5px 5px;background-repeat:no-repeat}
+select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;background-image:linear-gradient(45deg,transparent 50%,#6A5A45 50%),linear-gradient(135deg,#6A5A45 50%,transparent 50%);background-position:calc(100% - 14px) 50%,calc(100% - 9px) 50%;background-size:5px 5px;background-repeat:no-repeat}
 
 /* Kausi-ilmoitus */
 .notice{margin-top:4px;background:#fff8e6;border:1px solid #f1dfa6;color:#5a4a12;border-radius:12px;padding:8px 34px 8px 10px;font-size:12.5px;line-height:1.35;position:relative;box-shadow:0 2px 8px rgba(20,35,46,.08)}
@@ -91,7 +91,7 @@ select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;backgroun
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:1100;background:var(--card);border-radius:18px 18px 0 0;box-shadow:0 -8px 30px rgba(20,35,46,.22);transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);max-height:78vh;display:flex;flex-direction:column}
 .sheet.open{transform:translateY(0)}
 @media(min-width:760px){.sheet{left:auto;right:12px;bottom:12px;top:auto;width:400px;border-radius:18px;max-height:calc(100vh - 140px)}}
-.grab{width:40px;height:4px;border-radius:2px;background:#d3d9dd;margin:8px auto 0;flex:none}
+.grab{width:40px;height:4px;border-radius:2px;background:#D8CDBA;margin:8px auto 0;flex:none}
 .sh-head{padding:8px 16px 10px;display:flex;gap:10px;align-items:flex-start;flex:none;border-bottom:1px solid var(--line)}
 .sh-head h2{margin:0;font-size:18px;line-height:1.2;letter-spacing:-.01em}
 .sh-head .meta{color:var(--muted);font-size:13px;margin-top:3px}
@@ -120,14 +120,14 @@ select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;backgroun
 .bars .b em{font-style:normal;font-weight:700;font-size:11.5px}
 .bars .b span{color:var(--muted);font-size:10.5px}
 .wx{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
-.wx div{background:#f6f8f9;border-radius:10px;padding:6px 2px;font-size:11px;line-height:1.3}
+.wx div{background:var(--sand);border-radius:10px;padding:6px 2px;font-size:11px;line-height:1.3}
 .wx .ic{font-size:20px;display:block;margin:2px 0}
 .wx b{font-size:13px}
 .wx .w{color:var(--muted);font-size:10.5px}
 .events{display:flex;flex-wrap:wrap;gap:6px}
 .events span{background:#fdecec;color:#8a2222;border-radius:8px;padding:3px 8px;font-size:12.5px;font-weight:600}
 .links a{color:var(--accent);font-weight:600;font-size:14px;text-decoration:none}
-.disc{margin-top:16px;padding:10px 12px;background:#f6f8f9;border-radius:12px;font-size:12px;color:var(--muted);line-height:1.45}
+.disc{margin-top:16px;padding:10px 12px;background:var(--sand);border-radius:12px;font-size:12px;color:var(--muted);line-height:1.45}
 
 /* Info-ikkuna */
 .modal{position:fixed;inset:0;z-index:1200;background:rgba(20,35,46,.45);display:none;align-items:flex-end;justify-content:center}
@@ -136,7 +136,7 @@ select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;backgroun
 @media(min-width:760px){.modal{align-items:center}.modal .box{border-radius:18px}}
 .modal h2{margin:0 0 8px;font-size:19px}
 .modal h3{margin:16px 0 4px;font-size:14px}
-.modal p,.modal li{color:#33434e}
+.modal p,.modal li{color:#2A3B47}
 .modal ul{padding-left:18px;margin:4px 0}
 .loading{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:2000;background:var(--sea);font-weight:650;color:var(--muted);font-size:15px}
 </style>
@@ -495,7 +495,7 @@ nl:{
 }
 };
 const L_ = () => I18N[LANG];
-const QC = {E:"#1f78c8",G:"#2fa35b",S:"#e3b505",P:"#d64545",N:"#9aa4ab","-":"#d7dcdf"};
+const QC = {E:"#0B63A8",G:"#6FA3D2",S:"#D9822B",P:"#8E2A12",N:"#9AA0A6","-":"#C9CDD0"};
 const REG = {eu:[[35,-10.5],[65,31]], metro:[[41.2,-5.3],[51.2,9.7]],corse:[[41.3,8.4],[43.1,9.7]],riviera:[[42.9,5.2],[43.9,7.6]],atl:[[43.3,-4.6],[48.0,-0.8]],manche:[[48.4,-5],[51.1,2.6]],guad:[[15.8,-61.9],[16.6,-61.0]],mart:[[14.35,-61.25],[14.9,-60.8]],stm:[[17.85,-63.2],[18.15,-62.75]],reu:[[-21.4,55.2],[-20.85,55.85]],may:[[-13.05,45.0],[-12.6,45.3]],guy:[[4.5,-53.6],[5.8,-51.9]],
   hki:[[60.05,24.55],[60.35,25.3]], tre:[[61.35,23.4],[61.7,24.1]], lake:[[61.0,25.5],[63.3,30.5]],
   canarias:[[27.6,-18.2],[29.5,-13.3]], baleares:[[38.6,1.1],[40.1,4.4]], costasol:[[36.2,-5.4],[36.9,-3.5]], sicilia:[[36.6,12.3],[38.4,15.7]], sardegna:[[38.8,8.1],[41.3,9.9]],
@@ -515,7 +515,7 @@ const WX = s => { if(!s) return "·"; s=s.replace(/_(day|night|polartwilight)$/,
   if(s.includes("thunder")) return "⛈️"; if(s.includes("snow")||s.includes("sleet")) return "🌨️";
   if(s.includes("heavyrain")||s==="rain") return "🌧️"; if(s.includes("rain")) return "🌦️";
   if(s==="fog") return "🌫️"; if(s==="cloudy") return "☁️"; if(s==="partlycloudy") return "⛅"; if(s==="fair") return "🌤️"; if(s==="clearsky") return "☀️"; return "☁️"; };
-const TB = [[6,"#1d2f6f"],[10,"#2b4c9b"],[14,"#2f7fc1"],[18,"#33a6b8"],[21,"#55b77a"],[24,"#e5b62a"],[27,"#ec8a2c"],[99,"#d9542f"]];
+const TB = [[6,"#1B2A6B"],[10,"#2D4FA3"],[14,"#3C83C5"],[18,"#3FA7B5"],[21,"#8FC6C9"],[24,"#E9C46A"],[27,"#EF8B2F"],[99,"#D9502B"]];
 const tempColor = t => t==null? "#c3cacf" : TB.find(([lim])=>t<lim)[1];
 const TBANDS = [["<6",TB[0][1]],["6–10",TB[1][1]],["10–14",TB[2][1]],["14–18",TB[3][1]],["18–21",TB[4][1]],["21–24",TB[5][1]],["24–27",TB[6][1]],["27+",TB[7][1]]];
 const nf = (x,d=1) => LANG==="en" ? x.toFixed(d) : x.toFixed(d).replace(".",",");
@@ -575,9 +575,9 @@ function sampleVerdict(s, smp){
   if(!smp) return null; const num=x=>x==null?null:parseFloat(String(x).replace("<",""));
   const ec=num(smp[1]), ei=num(smp[2]); if(ec==null&&ei==null) return null;
   const sea = s[3]==="C"||s[3]==="T"; const lim = sea?[1000,370]:[1800,660];
-  if((ec??0)>lim[0]||(ei??0)>lim[1]) return {t:L_().sv.bad,c:"#d64545"};
-  if((ec??0)<=100&&(ei??0)<=100) return {t:L_().sv.good,c:"#2fa35b"};
-  return {t:L_().sv.avg,c:"#e3b505"};
+  if((ec??0)>lim[0]||(ei??0)>lim[1]) return {t:L_().sv.bad,c:"#8E2A12"};
+  if((ec??0)<=100&&(ei??0)<=100) return {t:L_().sv.good,c:"#0B63A8"};
+  return {t:L_().sv.avg,c:"#D9822B"};
 }
 function waterWord(t){ if(t==null) return null; const w=L_().ww;
   return t>=24?w[5]: t>=20?w[4]: t>=17?w[3]: t>=14?w[2]: t>=8?w[1]: w[0]; }
@@ -593,7 +593,7 @@ function restyle(){
   const r=radius(); let n=0;
   markers.forEach((m,i)=>{ const v=visible(i); if(v) n++;
     const noTemp = mode==="t" && tempOf(i)==null;
-    m.setStyle({radius: noTemp? r*0.6 : r, fillColor: colorOf(i), color: i===current? (sat?"#ffeb3b":"#14232e"):"#ffffff", weight: i===current?3:(sat?2:1), opacity: v?1:0, fillOpacity: v?(noTemp?.55:.95):0});
+    m.setStyle({radius: noTemp? r*0.6 : r, fillColor: colorOf(i), color: i===current? (sat?"#ffeb3b":"#0F2533"):"#ffffff", weight: i===current?3:(sat?2:1), opacity: v?1:0, fillOpacity: v?(noTemp?.55:.95):0});
     if(i===current && v) m.bringToFront(); });
   legend(n);
 }
@@ -619,7 +619,7 @@ function legend(n){
 }
 function bars(vals, labels, hi){
   const mn=Math.min(...vals)-1.5, mx=Math.max(...vals)+.5;
-  return `<div class="bars">`+vals.map((t,k)=>`<div class="b"><em>${tv(t)}</em><i style="height:${Math.max(8,(t-mn)/(mx-mn||1)*60)}px;background:${tempColor(t)};${k===hi?"outline:2px solid #14232e;outline-offset:1px":""}"></i><span>${labels[k]}</span></div>`).join("")+`</div>`;
+  return `<div class="bars">`+vals.map((t,k)=>`<div class="b"><em>${tv(t)}</em><i style="height:${Math.max(8,(t-mn)/(mx-mn||1)*60)}px;background:${tempColor(t)};${k===hi?"outline:2px solid #0F2533;outline-offset:1px":""}"></i><span>${labels[k]}</span></div>`).join("")+`</div>`;
 }
 function openSheet(i, pan=true){
   current=i; const t=L_(), s=S[i], x=T.sst[i], lk=T.lake[i], wxi=T.wx_cell[i], wx = wxi!=null? T.wx[wxi]: null;
@@ -632,10 +632,10 @@ function openSheet(i, pan=true){
   if(tNow!=null){
     h+=`<div class="today" style="background:${tempColor(tNow)}1f"><div class="big">${t0(tNow)}<small>${unitSw()}</small></div><div class="txt"><b>${waterWord(tNow)}</b>${!x&&lk?t.measured(fmtD(lk[0][lk[0].length-1][0])):""}${qtxt}${air}</div></div>`;
   } else {
-    h+=`<div class="today" style="background:#f1f4f6"><div class="txt"><b>${qn} (EU 2025)</b>${t.noTempYet}${air}</div></div>`;
+    h+=`<div class="today" style="background:var(--sand)"><div class="txt"><b>${qn} (EU 2025)</b>${t.noTempYet}${air}</div></div>`;
   }
   const yrs=[2025,2024,2023,2022,2021];
-  h+=`<div class="sec"><h3>${t.secQ}</h3><div class="qrow"><span class="badge" style="background:${QC[qk]}">${qn}</span><div class="hist">`+
+  h+=`<div class="sec"><h3>${t.secQ}</h3><div class="qrow"><span class="badge" style="background:${QC[qk]};color:${qk==="G"||qk==="-"||qk==="N"?"#0F2533":"#fff"}">${qn}</span><div class="hist">`+
      yrs.map((y,k)=>`<span><i style="background:${QC[s[6][k]]||"#d7dcdf"}" title="${y}: ${t.q[s[6][k]]||""}"></i>${String(y).slice(2)}</span>`).reverse().join("")+
      `</div></div><div class="note">${t.qNote}</div></div>`;
   const smp=s[8], v=sampleVerdict(s,smp);
@@ -727,9 +727,9 @@ function locate(){
     btn.classList.remove("busy"); me=[pos.coords.latitude, pos.coords.longitude];
     if(meLayer) map.removeLayer(meLayer);
     meLayer=L.layerGroup([
-      L.circle(me,{radius:Math.min(pos.coords.accuracy,2000),color:"#14232e",weight:1,fillColor:"#14232e",fillOpacity:.06,interactive:false}),
-      L.circleMarker(me,{radius:14,stroke:false,fillColor:"#14232e",fillOpacity:.18,interactive:false}),
-      L.circleMarker(me,{radius:8,color:"#fff",weight:3,fillColor:"#14232e",fillOpacity:1,interactive:false})]).addTo(map);
+      L.circle(me,{radius:Math.min(pos.coords.accuracy,2000),color:"#0F2533",weight:1,fillColor:"#0F2533",fillOpacity:.06,interactive:false}),
+      L.circleMarker(me,{radius:14,stroke:false,fillColor:"#0F2533",fillOpacity:.18,interactive:false}),
+      L.circleMarker(me,{radius:8,color:"#fff",weight:3,fillColor:"#0F2533",fillOpacity:1,interactive:false})]).addTo(map);
     const near=S.map((s,i)=>[i,hav(me[0],me[1],s[4],s[5])]).filter(x=>visible(x[0])).sort((a,b)=>a[1]-b[1]).slice(0,5);
     const pts=[me, ...near.filter(x=>x[1]<60).map(x=>[S[x[0]][4],S[x[0]][5]])];
     if(pts.length>1) map.fitBounds(L.latLngBounds(pts).pad(.3),{maxZoom:13, paddingBottomRight:[0, window.innerWidth<760? map.getSize().y*0.55:0]}); else map.setView(me,10);

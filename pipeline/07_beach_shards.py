@@ -84,6 +84,22 @@ for cc, lst in bycc.items():
 countries.sort(key=lambda r: r[1])
 json.dump({"d": dates, "c": countries}, open("site/data/countries.json", "w"), separators=(",", ":"))
 
+# --- suosittujen rantakohteiden meriveden lämpö (rantasivun "lämpimämpää vettä" -vertailu) ---
+# Sama päivä ja sama lähde (paikkakunnan rantojen mediaani), ei sponsoroitua järjestystä.
+WARM = [("ES", "Playa del Ingles", "Gran Canaria"), ("ES", "Playa de las Américas", "Tenerife"), ("ES", "Puerto del Carmen", "Lanzarote"),
+        ("ES", "Corralejo", "Fuerteventura"), ("PT", "São Martinho", "Madeira"), ("ES", "Torremolinos", ""), ("ES", "Marbella", ""),
+        ("ES", "Benidorm", ""), ("ES", "Alicante", ""), ("ES", "Torrevieja", ""), ("ES", "Sant Antoni de Portmany", "Ibiza"),
+        ("ES", "Cala Millor", "Mallorca"), ("PT", "Albufeira", ""), ("CY", "Ayia Napa", ""), ("CY", "Paphos", ""), ("CY", "Limassol", ""),
+        ("CY", "Larnaca", ""), ("MT", "Sliema", ""), ("MT", "San Ġiljan", ""), ("EL", "Faliraki", ""), ("EL", "Kos", ""),
+        ("EL", "Ágios Nikólaos", ""), ("EL", "Argási", ""), ("IT", "Taormina", ""), ("IT", "Cagliari", ""), ("HR", "Split", ""),
+        ("HR", "Dubrovnik", ""), ("FR", "Nice", ""), ("FR", "Cannes", ""), ("BG", "Varna", "")]
+warm = []
+for cc, name, isl in WARM:
+    r = next((r for r in bycc.get(cc, []) if r[1] == name), None)
+    if r and r[5]: warm.append([cc, r[0], name if name != "São Martinho" else "Funchal", isl, r[5]])
+json.dump({"d": dates, "r": warm}, open("site/data/warm.json", "w"), separators=(",", ":"), ensure_ascii=False)
+print(len(warm), "vertailukohdetta")
+
 # --- sitemap-indeksi ---
 B = "https://wheretoswimtoday.com"
 urls = [f"{B}/"]
