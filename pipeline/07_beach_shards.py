@@ -78,6 +78,7 @@ if os.path.exists("site/pages_urls.txt"):
     urls += [B + u for u in open("site/pages_urls.txt").read().split()]
 for L in LANGS:
     p = f"/{L}" if L else ""
+    if L: urls.append(f"{B}{p}/")
     urls.append(f"{B}{p}/beaches/")
     for c in countries: urls.append(f"{B}{p}/beaches/{c[1]}/")
     for (cc, sl) in sorted(towns):
