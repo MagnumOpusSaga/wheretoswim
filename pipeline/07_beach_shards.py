@@ -24,6 +24,8 @@ ap_xyz = np.array([[np.cos(np.radians(r[3])) * np.cos(np.radians(r[4])), np.cos(
 ap_tree = cKDTree(ap_xyz)
 big = [i for i, r in enumerate(AP) if r[5] == "l"]; big_tree = cKDTree(ap_xyz[big])
 apd, api = ap_tree.query(xyz, k=1); bgd, bgi = big_tree.query(xyz, k=1)
+# kuukausikeskiarvot 2016–2025 (10_climate.py, ajetaan kerran vuodessa)
+CL = json.load(open("data/climate.json"))["sites"] if os.path.exists("data/climate.json") else {}
 def chord_km(c): return round(float(2 * 6371 * np.arcsin(min(1.0, c / 2))))
 shards = {}
 for i, s in enumerate(S):
@@ -38,6 +40,7 @@ for i, s in enumerate(S):
     if T["sst"][i]: b["sst"] = T["sst"][i]
     if T["lake"][i]: b["lake"] = T["lake"][i]
     if wi is not None: b["wx"] = str(wi)
+    if s[0] in CL: b["cl"] = CL[s[0]][0]
     aps = [[AP[api[i]][0], chord_km(apd[i])]]
     j = big[bgi[i]]
     if j != api[i] and chord_km(bgd[i]) <= 150: aps.append([AP[j][0], chord_km(bgd[i])])
@@ -62,7 +65,9 @@ for i, s in enumerate(S):
     if not s[2]: continue
     k = (s[10], tslug(s[2]))
     if not k[1]: continue
-    t = towns.setdefault(k, {"name": s[2], "ids": [], "la": [], "lo": [], "sst": [], "lake": [], "q": {}})
+    t = towns.setdefault(k, {"name": s[2], "ids": [], "la": [], "lo": [], "sst": [], "lake": [], "q": {}, "cl": [], "ap": None})
+    if s[0] in CL: t["cl"].append(CL[s[0]])
+    if t["ap"] is None: t["ap"] = AP[api[i]][0]
     t["ids"].append([s[0], key(s), s[1], s[3], s[6][0]]); t["la"].append(s[4]); t["lo"].append(s[5])
     if T["sst"][i]: t["sst"].append(T["sst"][i][0])
     elif T["lake"][i]: t["lake"].append(T["lake"][i][0][-1][1])
@@ -72,7 +77,9 @@ bycc = {}
 for (cc, sl), t in towns.items():
     med = [round(float(np.median([a[j] for a in t["sst"]])), 1) for j in range(len(dates))] if t["sst"] else None
     lake = round(float(np.median(t["lake"])), 1) if (not t["sst"] and t["lake"]) else None
-    bycc.setdefault(cc, []).append([sl, t["name"], round(float(np.mean(t["la"])), 4), round(float(np.mean(t["lo"])), 4), t["ids"], med, lake, t["q"]])
+    cl = [[round(float(np.median([c[k][j] for c in t["cl"]])), 1) for j in range(12)] for k in range(3)] if t["cl"] else None
+    t["clim"] = cl
+    bycc.setdefault(cc, []).append([sl, t["name"], round(float(np.mean(t["la"])), 4), round(float(np.mean(t["lo"])), 4), t["ids"], med, lake, t["q"], cl[0] if cl else None])
 countries = []
 for cc, lst in bycc.items():
     lst.sort(key=lambda r: r[0])
@@ -100,6 +107,33 @@ for cc, name, isl in WARM:
 json.dump({"d": dates, "r": warm}, open("site/data/warm.json", "w"), separators=(",", ":"), ensure_ascii=False)
 print(len(warm), "vertailukohdetta")
 
+# --- kuukausisivut: suosittujen kohteiden 10 v keskiarvot (ryhmä = Kypros/Malta yhtenä kohteena) ---
+GROUP = {"CY": "CY", "MT": "MT"}
+mon = []
+for cc, name, isl in WARM:
+    t = towns.get((cc, tslug(name)))
+    if t and t["clim"]:
+        mon.append([cc, tslug(name), name if name != "São Martinho" else "Funchal", isl, GROUP.get(cc, cc + ":" + name), t["ap"], *t["clim"]])
+json.dump({"years": [2016, 2025], "r": mon}, open("site/data/months.json", "w"), separators=(",", ":"), ensure_ascii=False)
+
+# --- vuosiraportti: erinomainen viisi kautta putkeen (EEA, kaudet 2021–2025) ---
+rep_c = {}
+for s_ in S:
+    r = rep_c.setdefault(s_[10], [0, 0, 0, 0])
+    r[0] += 1; r[1] += s_[6] == "EEEEE"; r[2] += s_[6][0] == "E"; r[3] += s_[6][0] == "P"
+tot = [sum(r[k] for r in rep_c.values()) for k in range(4)]
+rows = sorted([[cc, slug(CNAME[cc]), *r, round(r[1] / r[0] * 100, 1)] for cc, r in rep_c.items() if r[0] >= 100], key=lambda r: -r[6])
+tt = {}
+for s_ in S:
+    if s_[6] == "EEEEE" and s_[2] and tslug(s_[2]): tt.setdefault(s_[10], {}).setdefault(s_[2], 0); tt[s_[10]][s_[2]] += 1
+top = {cc: [[n, tslug(n), k] for n, k in sorted(d.items(), key=lambda x: -x[1])[:5]] for cc, d in tt.items()}
+json.dump({"seasons": [2021, 2025], "tot": tot, "c": rows, "top": top}, open("site/data/report.json", "w"), separators=(",", ":"), ensure_ascii=False)
+with open("site/data/cleanest-beaches-2021-2025.csv", "w") as fh:
+    fh.write("country,bathing_waters,excellent_5_of_5_seasons,share_percent,excellent_2025,poor_2025\n")
+    for cc, r in sorted(rep_c.items()):
+        fh.write(f"{CNAME[cc]},{r[0]},{r[1]},{round(r[1] / r[0] * 100, 1)},{r[2]},{r[3]}\n")
+print("raportti", tot)
+
 # --- sitemap-indeksi ---
 B = "https://wheretoswimtoday.com"
 urls = [f"{B}/"]
@@ -110,6 +144,9 @@ for L in LANGS:
     if L: urls.append(f"{B}{p}/")
     urls.append(f"{B}{p}/beaches/")
     urls.append(f"{B}{p}/flight-delay/")
+    urls.append(f"{B}{p}/reports/cleanest-beaches/")
+    for m in ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]:
+        urls.append(f"{B}{p}/sea-temperature/{m}/")
     for c in countries: urls.append(f"{B}{p}/beaches/{c[1]}/")
     for (cc, sl) in sorted(towns):
         urls.append(f"{B}{p}/beaches/{slug(CNAME[cc])}/{sl}/")

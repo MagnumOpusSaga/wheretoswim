@@ -4,6 +4,7 @@ import { STR, EV_EN, EV, MAP } from "./i18n.js";
 import { BOX, GUIDE, GUIDE_AH, GUIDE_AH_BTN, PRIV } from "./guide.js";
 import { AFF } from "./affiliates.js";
 import { UI } from "./ui.js";
+import { ART, MONTHS, mIn, mName, capF } from "./articles.js";
 
 const SITE = "Where to Swim", HOST = "https://wheretoswimtoday.com";
 const LANGS = ["en", "fi", "de", "fr", "es", "it", "nl"];
@@ -113,6 +114,19 @@ ul.az{columns:3 200px;column-gap:18px;padding:0;margin:0;list-style:none;font-si
 .muted{font-size:13.5px}.disc{background:#fff;border-radius:12px;padding:12px 14px;font-size:13.5px;color:var(--muted);margin-top:22px;box-shadow:0 0 0 1px var(--line) inset}
 .getthere{background:#fff;border-radius:14px;padding:12px 14px;margin:0 0 18px;box-shadow:0 0 0 1px var(--line) inset}.getthere h2{margin:0 0 6px;font-size:16px}.getthere ul{list-style:none;margin:0;padding:0}.getthere li{padding:5px 0;border-top:1px solid var(--line);font-size:14.5px}.getthere li:first-child{border-top:0}
 small.aff{font-size:11px;font-weight:500;color:var(--muted);background:var(--chip);border-radius:6px;padding:1px 6px;white-space:nowrap}
+.bars12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;align-items:end;margin:12px 0 0}.bars12 a{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:140px;text-decoration:none;color:var(--ink)}.bars12 em{font-style:normal;font-size:10.5px;font-weight:700}.bars12 i{display:block;width:100%;border-radius:5px}.bars12 span{font-size:10.5px;color:var(--muted)}.bars12 a.on span{color:var(--ink);font-weight:800}.bars12 a.on i{box-shadow:0 0 0 2px var(--ink)}
+.mchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 16px;padding:2px}.mchips a{flex:none;min-height:40px;padding:0 13px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1px var(--outline);display:flex;align-items:center;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none}.mchips a.on{background:var(--ink);color:#fff;box-shadow:none}
+.rk{display:flex;flex-direction:column;gap:8px;margin:0 0 16px}.rk .it{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}.rk .it.top{border:2px solid var(--accent)}
+.rk .hd{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}.rk .n{width:24px;font-size:15px;font-weight:800;color:var(--muted)}.rk .top .n{color:var(--accent)}.rk .nm{flex:1;min-width:0;display:flex;flex-direction:column}.rk .nm b{font-size:15.5px}.rk .nm span{font-size:12.5px;color:var(--muted)}
+.rk .tv{text-align:right;display:flex;flex-direction:column}.rk .tv b{font-size:18px}.rk .tv span{font-size:11.5px;color:var(--muted)}.rk .tr{height:8px;background:#F3ECE1;border-radius:4px;overflow:hidden}.rk .tr i{display:block;height:8px;border-radius:4px}
+.rk .ab{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:46px;border-radius:12px;box-shadow:0 0 0 1px var(--outline) inset;padding:6px 12px;text-decoration:none;color:var(--ink);font-weight:650;font-size:14.5px}.rk .more{font-size:14px;font-weight:600}
+.mgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 18px}.mgrid a{min-height:42px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#fff;box-shadow:inset 0 0 0 1px var(--line);font-size:13.5px;font-weight:600;color:var(--ink);text-decoration:none}.mgrid a.on{background:var(--ink);color:#fff;box-shadow:none}
+.todayb{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--soft);border-radius:14px;padding:14px;margin:0 0 18px;text-decoration:none;color:var(--ink)}.todayb b{display:block;font-size:15px}.todayb span{font-size:13px;color:#33505F}.todayb em{font-style:normal;font-weight:700;color:var(--accent)}
+.meth{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px;margin:0 0 18px;font-size:13.5px;color:#33434E}.meth b{display:block;font-size:15px;color:var(--ink);margin:0 0 4px}.meth p{margin:0 0 6px}
+.badge2{display:inline-block;font-size:12px;font-weight:700;color:var(--accent);background:var(--soft);border-radius:999px;padding:3px 10px;margin:0 0 6px}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 18px}.stats .bigs{grid-column:1/3;background:var(--accent);color:#fff;border-radius:18px;padding:16px}.stats .bigs b{display:block;font-size:44px;line-height:1;font-weight:800;margin:0 0 4px}.stats div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.stats div b{display:block;font-size:24px;font-weight:800}.stats div span{font-size:12.5px;color:var(--muted)}.stats .bigs span{font-size:14.5px;color:#fff}
+.crank{display:flex;flex-direction:column;gap:2px}.crank div{display:flex;align-items:center;gap:8px;min-height:32px;border-radius:8px;padding:0 6px}.crank div.me{background:var(--soft)}.crank .r{width:22px;font-size:12.5px;font-weight:700;color:var(--muted)}.crank .c{width:96px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.crank .tr{flex:1;height:10px;background:#F3ECE1;border-radius:5px;overflow:hidden}.crank .tr i{display:block;height:10px;border-radius:5px}.crank .v{width:52px;text-align:right;font-size:14px;font-weight:800}
+.press{background:var(--ink);color:#fff;border-radius:18px;padding:16px;margin:0 0 18px}.press b{display:block;font-size:16px;margin:0 0 4px}.press p{margin:0 0 10px;font-size:14px;opacity:.9}.press .row{display:flex;gap:8px;flex-wrap:wrap}.press a,.press button{min-height:44px;padding:0 14px;border-radius:12px;border:0;font:inherit;font-weight:650;font-size:14px;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none}.press a{background:#fff;color:var(--ink)}.press button{background:transparent;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
 footer{max-width:820px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}footer a{color:var(--muted)}footer .langs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px}`;
 
 function page(l, { title: ttl, desc, path, alt = true, head = "", body, status = 200, noindex = false }) {
@@ -125,7 +139,7 @@ function page(l, { title: ttl, desc, path, alt = true, head = "", body, status =
 <meta property="og:url" content="${url}"><meta property="og:image" content="${HOST}/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0B63A8">
 ${head}<style>${CSS}</style></head><body><header><div><a class="logo" href="/"><img src="/favicon.svg" alt="">${SITE}</a><nav><a href="${P(l)}/beaches/">${s.allCountries}</a><a href="${P(l)}/">${s.nav}</a></nav></div></header><main>${body}</main>
-<footer>${langs}${s.dataL}${COL(l)} European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), data.gouv.fr (Licence Ouverte), GeoNames (CC BY 4.0). · <a href="${P(l)}/embed/">${s.embedLink}</a> · <a href="${P(l)}/flight-delay/">${BOX[l].guide.replace(/ ?→$/, "")}</a> · <a href="${P(l)}/privacy/">${PRIV[l].link}</a> · <a href="/">wheretoswimtoday.com</a></footer>
+<footer>${langs}${s.dataL}${COL(l)} European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), data.gouv.fr (Licence Ouverte), GeoNames (CC BY 4.0). · <a href="${P(l)}/embed/">${s.embedLink}</a> · <a href="${P(l)}/flight-delay/">${BOX[l].guide.replace(/ ?→$/, "")}</a> · <a href="${P(l)}/reports/cleanest-beaches/">${ART[l].rShort}</a> · <a href="${P(l)}/sea-temperature/${MONTHS[new Date().getUTCMonth()]}/">${ART[l].hub}</a> · <a href="${P(l)}/privacy/">${PRIV[l].link}</a> · <a href="/">wheretoswimtoday.com</a></footer>
 </body></html>`, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=1800" } });
 }
 const ld = o => `<script type="application/ld+json">${JSON.stringify(o).replace(/</g, "\\u003c")}</script>`;
@@ -187,6 +201,7 @@ async function beach(env, url, l, id) {
     h += `<h2>${s.lakeH}</h2><table><tr><th>${s.dayH}</th><th>${s.waterH}</th></tr>${b.lake[0].slice().reverse().map(([dd, t]) => `<tr><td>${dayFmt(dd, l)}</td><td><span class="dot" style="background:${tempColor(t)}"></span>${TH(t, l, 1)}</td></tr>`).join("")}</table><p class="muted">${s.lakeNote(esc(b.lake[1]), nf(b.lake[2], 1, l))}</p>`;
   }
   if (wx && wx.length) h += `<section class="panel"><h2>${s.wxH}</h2><div class="wxg">${wx.map(r => `<div>${r[0] === today ? s.today : dayFmt(r[0], l).split(/[ ,]/)[0]}<b>${WX(r[4])} ${nf(r[1], 0, l)}°</b>${r[2]} m/s${r[3] ? `<br>${r[3]} mm` : ""}</div>`).join("")}</div></section>`;
+  h += climHtml(l, b.cl);
   // lähirannat (enintään 3)
   const near = (b.n || []).map(x => lookup(idx, x)).filter(Boolean).slice(0, 3);
   if (near.length) {
@@ -243,6 +258,7 @@ async function town(env, url, l, csl, tsl) {
   h += `<div class="cta"><a class="btn p" href="${P(l)}/?b=${encodeURIComponent(rows[0].id)}">🗺️ ${s.openMap}</a><button class="btn s" id="share">⤴ ${s.share}</button></div>`;
   h += `<h2>${s.townBeachesH}</h2><table><tr><th>${s.colBeach}</th><th>${s.colWater}</th><th>${s.colQ}</th></tr>${rows.map(r => `<tr><td><a href="${beachPath(l, r.id, r.raw, t[1])}">${esc(r.name)}</a><br><small class="f">${s.type[r.w]}</small></td><td>${r.tt != null ? `<span class="dot" style="background:${tempColor(r.tt)}"></span>${TH(r.tt, l)}` : "–"}</td><td><span style="white-space:nowrap">${qi(r.q)}${s.q[r.q] || s.q["-"]}</span></td></tr>`).join("")}</table>`;
   if (t[5]) h += `<h2>${s.townSstH}</h2><table><tr><th>${s.dayH}</th><th>${s.waterH}</th></tr>${t[5].slice(di).map((v, k) => `<tr><td>${k === 0 ? s.today : dayFmt(TW.d[di + k], l)}</td><td><span class="dot" style="background:${tempColor(v)}"></span>${TH(v, l, 1)}</td></tr>`).join("")}</table>`;
+  h += climHtml(l, t[8]);
   const wr = rows.find(r => r.b && r.b.wx && r.g.w[r.b.wx]); const wx = wr ? wr.g.w[wr.b.wx].filter(r => r[0] >= today) : null;
   if (wx && wx.length) h += `<h2>${s.wxH}</h2><table><tr><th>${s.dayH}</th><th></th><th>${s.maxH}</th><th>${s.windH}</th><th>${s.rainH}</th></tr>${wx.map(r => `<tr><td>${r[0] === today ? s.today : dayFmt(r[0], l)}</td><td>${WX(r[4])}</td><td>${TH(r[1], l)}</td><td>${r[2]} m/s</td><td>${r[3] ? r[3] + " mm" : "–"}</td></tr>`).join("")}</table>`;
   const near = TW.t.filter(x => x !== t).map(x => [x, hav(t[2], t[3], x[2], x[3])]).sort((a, b) => a[1] - b[1]).slice(0, 8);
@@ -267,6 +283,7 @@ async function country(env, url, l, csl) {
   if (ranked.length) h += `<h2>${s.warmestH}</h2><ul class="near">${ranked.map(([x, v]) => `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/"><span>${esc(x[1])}<span class="muted"> · ${s.beachesN(x[4].length)}</span></span><span><span class="dot" style="background:${tempColor(v)}"></span>${TH(v, l)}</span></a></li>`).join("")}</ul>`;
   const coll = new Intl.Collator(LOC[l]);
   const az = TW.t.slice().sort((a, b) => coll.compare(a[1], b[1]));
+  h += `<p><a href="${P(l)}/sea-temperature/${MONTHS[new Date().getUTCMonth()]}/">${ART[l].hub} →</a><br><a href="${P(l)}/reports/cleanest-beaches/">${ART[l].rShort} →</a></p>`;
   h += `<p><a href="${P(l)}/flight-delay/">✈️ ${BOX[l].guide}</a></p>`;
   h += `<h2>${s.allPlacesH}</h2><ul class="az">${az.map(x => `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/">${esc(x[1])}</a> <span>${x[4].length}</span></li>`).join("")}</ul>`;
   h += `<div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>`;
@@ -404,8 +421,75 @@ async function mapPage(env, url, l) {
   return new Response(h, { headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=600" } });
 }
 
+
+// ---------- vesi kuukausittain (10 v keskiarvo) ----------
+function climHtml(l, cl) {
+  if (!cl || cl.length !== 12) return "";
+  const A = ART[l], mx = Math.max(...cl), mn = Math.min(...cl), iw = cl.indexOf(mx), ic = cl.indexOf(mn), cur = new Date().getUTCMonth();
+  const bars = cl.map((v, i) => `<a href="${P(l)}/sea-temperature/${MONTHS[i]}/"${i === cur ? ` class="on"` : ""} title="${esc(capF(mName(l, i)))}"><em>${Math.round(v)}</em><i style="height:${Math.round(20 + (v - mn) / ((mx - mn) || 1) * 80)}px;background:${tempColor(v)}"></i><span>${esc(mName(l, i, "narrow"))}</span></a>`).join("");
+  return `<section class="panel"><div class="hd"><h2>${A.clH}</h2><span>°C</span></div><div class="bars12">${bars}</div><p class="muted" style="margin:10px 0 0">${A.clBest(mIn(l, iw), T(mx, l), mIn(l, ic), T(mn, l))} <span style="color:var(--muted)">${A.clNote(2016, 2025)}.</span></p></section>`;
+}
+
+// ---------- kuukausisivu: missä meri on lämmin <kuukautena> ----------
+const pct = (v, l) => nf(v, 1, l) + (["en", "it", "nl"].includes(l) ? "%" : " %");
+async function monthPage(env, url, l, mi) {
+  const A = ART[l], s = STR[l], o = url.origin, path = `/sea-temperature/${MONTHS[mi]}/`;
+  if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
+  const [D, C] = await Promise.all([asset(env, o, "/data/months.json"), countries(env, o)]);
+  const seen = new Set(), rows = [];
+  for (const r of D.r.slice().sort((a, b) => b[6][mi] - a[6][mi])) { if (seen.has(r[4])) continue; seen.add(r[4]); rows.push(r); if (rows.length === 10) break; }
+  const lab = r => r[3] || r[2], sub = r => r[3] ? r[2] : cnameBare(r[0], l), tC = v => `${nf(v, 1, l)} °C`;
+  const mi_ = mIn(l, mi), mN = capF(mName(l, mi)), cur = new Date().getUTCMonth();
+  const crumbs = [[s.home, P(l) + "/"], [A.crumb, `${P(l)}/sea-temperature/${MONTHS[cur]}/`], [mN, P(l) + path]];
+  const town = r => `${P(l)}/beaches/${cslugOf(C, r[0])}/${r[1]}/`;
+  let h = crumbHtml(crumbs) + `<h1>${esc(A.mH1(mi_))}</h1><p class="fresh"><span>${A.meta} · <a href="#method">${A.how}</a></span></p>`;
+  h += `<section class="hero"><div class="vt"><span>${A.short}</span></div><p style="font-size:17px;line-height:1.45;opacity:1;margin:6px 0 0">${A.ans(mi_, `${esc(lab(rows[0]))}, ${tC(rows[0][6][mi])}`, `${esc(lab(rows[1]))} (${tC(rows[1][6][mi])})`, `${esc(lab(rows[2]))} (${tC(rows[2][6][mi])})`)}</p></section>`;
+  const order = [...Array(12).keys()].map(k => (mi + 10 + k) % 12);   // valittu kuukausi näkyviin heti alussa
+  h += `<nav class="mchips">${order.map(i => `<a href="${P(l)}/sea-temperature/${MONTHS[i]}/"${i === mi ? ` class="on" aria-current="page"` : ""}>${esc(capF(mName(l, i, "short")))}</a>`).join("")}</nav>`;
+  h += `<h2 style="margin:0">${A.rankH}</h2><p class="muted" style="margin:2px 0 8px;font-size:12.5px">${capF(A.avgL)} (${A.rangeT}). ${A.rankNote}</p>`;
+  h += `<div class="rk">${rows.map((r, k) => { const v = r[6][mi];
+    const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(AFF.flights.replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
+    return `<div class="it${k === 0 ? " top" : ""}"><a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(sub(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(A.byMonth(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
+  h += scaleHtml(l) + `<div style="height:16px"></div>`;
+  h += `<a class="todayb" href="${P(l)}/"><span><b>${A.todayH}</b><span>${A.todayS}</span></span><em>${A.mapL}</em></a>`;
+  h += `<section class="meth" id="method"><b>${A.how}</b><p>${A.method(mi_)}</p><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section>`;
+  h += `<h2 style="font-size:16px">${A.otherM}</h2><div class="mgrid">${MONTHS.map((m, i) => `<a href="${P(l)}/sea-temperature/${m}/"${i === mi ? ` class="on"` : ""}>${esc(capF(mName(l, i, "short")))}</a>`).join("")}</div>`;
+  h += `<p class="muted" style="font-size:12px">${A.disc}</p>`;
+  const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "Article", headline: A.mH1(mi_), inLanguage: l, url: HOST + P(l) + path,
+    isBasedOn: "https://marine.copernicus.eu/", publisher: { "@type": "Organization", name: SITE, url: HOST } });
+  return page(l, { title: A.mTitle(mi_) + " | " + SITE, desc: A.mDesc(mi_, lab(rows[0]), tC(rows[0][6][mi])), path, head, body: h });
+}
+
+// ---------- vuosiraportti: Euroopan puhtaimmat rannat ----------
+const HOME = { fi: "FI", de: "DE", fr: "FR", es: "ES", it: "IT", nl: "NL" };
+async function reportPage(env, url, l) {
+  const A = ART[l], s = STR[l], o = url.origin, path = "/reports/cleanest-beaches/";
+  if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
+  const R = await asset(env, o, "/data/report.json"), [n, n5, nE, nP] = R.tot, loc = LOC[l];
+  const p5 = n5 / n * 100, home = HOME[l], hr = R.c.findIndex(r => r[0] === home);
+  const crumbs = [[s.home, P(l) + "/"], [A.rShort, P(l) + path]];
+  let h = crumbHtml(crumbs) + `<span class="badge2">${A.badge}</span><h1>${esc(A.rTitle)}</h1><p class="fresh"><span>${A.rMeta(n.toLocaleString(loc))} · <a href="#method">${A.how}</a></span></p>`;
+  h += `<div class="stats"><div class="bigs"><b>${Math.round(p5)}${["en", "it", "nl"].includes(l) ? "%" : " %"}</b><span>${A.big(n5.toLocaleString(loc), n.toLocaleString(loc))}</span></div><div><b>${Math.round(nE / n * 100)}${["en", "it", "nl"].includes(l) ? "%" : " %"}</b><span>${A.s2}</span></div><div><b>${nP.toLocaleString(loc)}</b><span>${A.s3}</span></div></div>`;
+  h += `<section class="panel"><h2 style="margin:0">${A.cRankH}</h2><p class="muted" style="margin:2px 0 10px;font-size:12.5px">${A.cRankNote}</p><div class="crank">${R.c.map((r, k) => `<div${r[0] === home ? ` class="me"` : ""}><span class="r">${k + 1}</span><a class="c" href="${P(l)}/beaches/${r[1]}/" style="color:var(--ink);text-decoration:none">${esc(cnameBare(r[0], l))}</a><span class="tr"><i style="width:${r[6]}%;background:${r[6] >= 80 ? "#0B63A8" : r[6] >= 50 ? "#6FA3D2" : "#D9822B"}"></i></span><span class="v">${pct(r[6], l)}</span></div>`).join("")}</div></section>`;
+  const tops = [...new Set(["HR", home || "EL"])].filter(cc => R.top[cc] && R.top[cc].length);
+  for (const cc of tops) {
+    const cs = (R.c.find(r => r[0] === cc) || [])[1];
+    h += `<h2>${esc(A.topH(cnameBare(cc, l)))}</h2><p class="muted" style="margin:0 0 8px">${A.topNote}</p><div class="nb">${R.top[cc].slice(0, 5).map(([nm, sl, k]) => `<a href="${P(l)}/beaches/${cs}/${sl}/"><span class="tt">${k}</span><span class="nm"><b>${esc(nm)}</b><span>${esc(A.nEx(k))}</span></span></a>`).join("")}</div>`;
+  }
+  const csv = "/data/cleanest-beaches-2021-2025.csv", cite = A.citeTxt(HOST + P(l) + path);
+  h += `<section class="press"><b>${A.pressH}</b><p>${A.pressTxt}</p><div class="row"><a href="${csv}" download>${A.csv}</a><button id="cite" data-t="${esc(cite)}">${A.cite}</button></div></section>`;
+  if (hr >= 0) { const r = R.c[hr], cn = cnameBare(r[0], l);
+    h += `<h2>${esc(A.homeH(cn, hr + 1))}</h2><p>${esc(A.homeTxt(cn, r[2].toLocaleString(loc), r[3].toLocaleString(loc), pct(r[6], l), r[5].toLocaleString(loc)))}</p><p><a href="${P(l)}/beaches/${r[1]}/">${esc(A.homeMap(cn))}</a></p>`; }
+  h += `<section class="meth" id="method"><b>${A.how}</b><p>${A.rMethod}</p><p>${A.rMethod2}</p><p style="color:var(--muted);margin:0">${A.rNext}</p></section>`;
+  h += `<script>document.getElementById("cite").onclick=async e=>{try{await navigator.clipboard.writeText(e.target.dataset.t);e.target.textContent=${JSON.stringify(A.copied)}}catch(x){}};</script>`;
+  const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "Dataset", name: A.rTitle, description: A.rDesc(pct(p5, l), n5, n), inLanguage: l, url: HOST + P(l) + path,
+    isBasedOn: "https://www.eea.europa.eu/en/topics/in-depth/bathing-water", creator: { "@type": "Organization", name: SITE, url: HOST }, license: "https://creativecommons.org/licenses/by/4.0/",
+    temporalCoverage: "2021/2025", distribution: { "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: HOST + csv } });
+  return page(l, { title: A.rTitle + " | " + SITE, desc: A.rDesc(pct(p5, l), n5.toLocaleString(loc), n.toLocaleString(loc)), path, head, body: h });
+}
+
 // ---------- reititys ----------
-const DYN = /^\/(beach|beaches|embed|flight-delay|privacy)(\/|$)/;
+const DYN = /^\/(beach|beaches|embed|flight-delay|privacy|sea-temperature|reports)(\/|$)/;
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -428,6 +512,9 @@ export default {
       else if ((m = path.match(/^\/beaches\/([a-z0-9-]+)\/([a-z0-9-]+)\/?$/))) res = await town(env, url, l, m[1], m[2]);
       else if (/^\/flight-delay\/?$/.test(path)) res = guidePage(url, l);
       else if (/^\/privacy\/?$/.test(path)) res = privacyPage(url, l);
+      else if ((m = path.match(/^\/sea-temperature\/([a-z]+)\/?$/)) && MONTHS.includes(m[1])) res = await monthPage(env, url, l, MONTHS.indexOf(m[1]));
+      else if (/^\/sea-temperature\/?$/.test(path)) res = Response.redirect(HOST + P(l) + `/sea-temperature/${MONTHS[new Date().getUTCMonth()]}/`, 302);
+      else if (/^\/reports\/cleanest-beaches\/?$/.test(path)) res = await reportPage(env, url, l);
       else if (/^\/embed\/?$/.test(path)) res = await embedPage(env, url, l);
       else if ((m = path.match(/^\/embed\/([^/]+)\/?$/))) res = await widget(env, url, LANGS.includes(wl) ? wl : l, decodeURIComponent(m[1]));
       else res = notFound(l);
