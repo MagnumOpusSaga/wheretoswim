@@ -539,7 +539,21 @@ const esc = s => String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">"
 const title = s => s.toLowerCase().replace(/(^|[\s\-'(/])(\p{L})/gu,(m,a,b)=>a+b.toUpperCase());
 
 let S=[], T=null, markers=[], mode="q", day=0, filt={exc:false,sea:false,fresh:false}, current=-1, sat=false, baseLayer=null;
-const map = L.map("map",{zoomControl:false,preferCanvas:true,minZoom:3,maxZoom:12,attributionControl:true,worldCopyJump:false});
+const map = L.map("map",{zoomControl:false,preferCanvas:true,minZoom:3,maxZoom:12,attributionControl:true,worldCopyJump:false,maxBoundsViscosity:1});
+// Kartta ei saa karata pois näkyvistä: rajataan Eurooppaan (Kanariat, Azorit, Kypros mukana).
+// Kun käyttäjä siirtyy merentakaiseen kohteeseen (esim. Guadeloupe, Réunion), rajat vaihdetaan sen alueen ympärille.
+const EUB = L.latLngBounds([[25,-34],[72,48]]);
+function allowFor(b){
+  b = L.latLngBounds(b);
+  if (EUB.contains(b)) return map.setMaxBounds(EUB);
+  const cur = map.options.maxBounds;
+  if (cur && cur.contains(b)) return;
+  const reg = Object.values(REG).map(r=>L.latLngBounds(r)).find(r=>!EUB.contains(r) && r.pad(.5).contains(b));
+  map.setMaxBounds(reg ? reg.pad(1.5) : L.latLngBounds([[b.getSouth()-5,b.getWest()-5],[b.getNorth()+5,b.getEast()+5]]));
+}
+["fitBounds","flyToBounds"].forEach(f=>{ const o=map[f].bind(map); map[f]=(b,...a)=>{ allowFor(b); return o(b,...a); }; });
+["setView","flyTo"].forEach(f=>{ const o=map[f].bind(map); map[f]=(c,...a)=>{ if(c) allowFor([c,c]); return o(c,...a); }; });
+map.setMaxBounds(EUB);
 map.attributionControl.setPrefix(false).addAttribution("Natural Earth · EEA · Copernicus Marine · Syke · MET Norway · data.gouv.fr");
 const rend = L.canvas({padding:.3,tolerance:9});
 map.createPane("base"); map.getPane("base").style.zIndex = 250;   // vektoripohjakartta aina pallojen alla
