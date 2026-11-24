@@ -114,7 +114,7 @@ ul.az{columns:3 200px;column-gap:18px;padding:0;margin:0;list-style:none;font-si
 .muted{font-size:13.5px}.disc{background:#fff;border-radius:12px;padding:12px 14px;font-size:13.5px;color:var(--muted);margin-top:22px;box-shadow:0 0 0 1px var(--line) inset}
 .getthere{background:#fff;border-radius:14px;padding:12px 14px;margin:0 0 18px;box-shadow:0 0 0 1px var(--line) inset}.getthere h2{margin:0 0 6px;font-size:16px}.getthere ul{list-style:none;margin:0;padding:0}.getthere li{padding:5px 0;border-top:1px solid var(--line);font-size:14.5px}.getthere li:first-child{border-top:0}
 small.aff{font-size:11px;font-weight:500;color:var(--muted);background:var(--chip);border-radius:6px;padding:1px 6px;white-space:nowrap}
-.bars12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;align-items:end;margin:12px 0 0}.bars12 a{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:140px;text-decoration:none;color:var(--ink)}.bars12 em{font-style:normal;font-size:10.5px;font-weight:700}.bars12 i{display:block;width:100%;border-radius:5px}.bars12 span{font-size:10.5px;color:var(--muted)}.bars12 a.on span{color:var(--ink);font-weight:800}.bars12 a.on i{box-shadow:0 0 0 2px var(--ink)}
+.bars12{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:3px;align-items:end;margin:12px 0 0}.bars12 a{display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:4px;height:140px;text-decoration:none;color:var(--ink)}.bars12 em{font-style:normal;font-size:10.5px;font-weight:700}.bars12 i{display:block;width:100%;border-radius:5px}.bars12 span{font-size:9.5px;color:var(--muted);white-space:nowrap}.bars12 a.on span{color:var(--ink);font-weight:800}.bars12 a.on i{box-shadow:0 0 0 2px var(--ink)}
 .mchips{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none;margin:0 0 16px;padding:2px}.mchips a{flex:none;min-height:40px;padding:0 13px;border-radius:999px;background:#fff;box-shadow:inset 0 0 0 1px var(--outline);display:flex;align-items:center;font-size:14px;font-weight:600;color:var(--ink);text-decoration:none}.mchips a.on{background:var(--ink);color:#fff;box-shadow:none}
 .rk{display:flex;flex-direction:column;gap:8px;margin:0 0 16px}.rk .it{background:#fff;border:1px solid var(--line);border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:8px}.rk .it.top{border:2px solid var(--accent)}
 .rk .hd{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}.rk .n{width:24px;font-size:15px;font-weight:800;color:var(--muted)}.rk .top .n{color:var(--accent)}.rk .nm{flex:1;min-width:0;display:flex;flex-direction:column}.rk .nm b{font-size:15.5px}.rk .nm span{font-size:12.5px;color:var(--muted)}
@@ -181,14 +181,14 @@ async function beach(env, url, l, id) {
 
   // otsikko + tuoreus
   let h = crumbHtml(crumbs) + `<h1>${esc(name)}</h1>`;
-  h += `<p class="fresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B63A8" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span><b>${U.upd} ${esc(updTxt(g.f, l))}</b> · ${esc([town, cn].filter(Boolean).join(", "))} · ${kind}</span></p>`;
+  h += `<p class="fresh"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B63A8" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span><b>${U.upd} ${esc(updTxt(g.f, l))}</b> · ${kind}</span></p>`;
   // vastaus ensin
   const air = w0 ? `<span>${s.wAir} ${nf(w0[1], 0, l)} °${l === "en" ? `C / ${F(w0[1])} °F` : "C"}</span>` : "";
   const wind = w0 ? `<span>${cap(s.wind)} ${w0[2]} m/s</span>` : "";
   const qChip = `<span>${qi(b.h[0], "#fff")}${s.euQuality}${COL(l)} ${q}</span>`;
   if (tNow != null) {
     h += `<section class="hero"><div class="row"><div class="big">${nf(tNow, 0, l)}°${l === "en" ? `<small>${F(tNow)} °F</small>` : ""}</div><div class="vt"><span>${s.waterToday}</span><b>${cap(s.verdict[vIdx(tNow)])}</b></div></div>
-<div class="chips">${qChip}${air}${wind}</div><p>${sst ? s.model : s.measured(dayFmt(lakeLast[0], l))}</p></section>`;
+<div class="chips">${qChip}${air}${wind}</div>${sst ? "" : `<p>${s.measured(dayFmt(lakeLast[0], l))}</p>`}</section>`;
   } else {
     h += `<section class="hero"><div class="vt"><span>${s.waterToday}</span><b>${s.notAvail}</b></div><div class="chips">${qChip}${air}${wind}</div></section>`;
   }
@@ -224,7 +224,7 @@ async function beach(env, url, l, id) {
     }
   }
   h += trip(l, b, g);
-  h += `<h2>${s.histH}</h2><div class="hist">${[2025, 2024, 2023, 2022, 2021].map((y, k) => `<span>${qi(b.h[k])}${y}${COL(l)} ${s.q[b.h[k]] || s.q["-"]}</span>`).join("")}</div><p class="muted">${s.histNote}</p>`;
+  h += `<section class="panel"><h2>${s.histH}</h2><div class="hist">${[2025, 2024, 2023, 2022, 2021].map((y, k) => `<span>${qi(b.h[k])}${y}${COL(l)} ${s.q[b.h[k]] || s.q["-"]}</span>`).join("")}</div><p class="muted" style="margin:10px 0 0">${s.histNote}</p></section>`;
   if (b.smp) h += `<h2>${s.smpH}</h2><table><tr><td>${s.dateH}</td><td>${dayFmt(b.smp[0], l)} ${b.smp[0].slice(0, 4)}</td></tr><tr><td>${s.ecoli}</td><td>${esc(b.smp[1] ?? "–")} /100 ml</td></tr><tr><td>${s.entero}</td><td>${esc(b.smp[2] ?? "–")} /100 ml</td></tr></table><p class="muted">${s.smpSrc}</p>`;
   if (b.ev) h += `<h2>${s.evH}</h2><ul>${Object.entries(b.ev).map(([k, n]) => `<li>${esc(l === "fr" ? k : (EV[l] && EV[l][k]) || EV_EN[k] || k)}${n > 1 ? ` (${n}×)` : ""}</li>`).join("")}</ul>`;
   h += `<p><a href="${P(l)}/embed/?b=${encodeURIComponent(m.id)}">&lt;/&gt; ${s.embedLink}</a></p>`;
@@ -254,13 +254,15 @@ async function town(env, url, l, csl, tsl) {
   const crumbs = [[s.home, P(l) + "/"], [cnameBare(cc, l), `${P(l)}/beaches/${csl}/`], [t[1], P(l) + path]];
   const tNow = townTemp(t, di);
   const desc = s.townDesc(t[1], cn, tNow != null ? T(tNow, l) : null, n);
-  let h = crumbHtml(crumbs) + `<h1>${esc(s.townH1(t[1]))}</h1><p class="sub">${esc(cn)} · ${s.beachesN(n)}</p><p class="lead">${lead}</p>`;
+  const oneW = rows.every(r => r.w === rows[0].w);
+  let h = crumbHtml(crumbs) + `<h1>${esc(s.townH1(t[1]))}</h1><p class="sub">${esc(cn)}${oneW ? ` · ${s.type[rows[0].w]}` : ""}</p><p class="lead">${lead}</p>`;
   h += `<div class="cta"><a class="btn p" href="${P(l)}/?b=${encodeURIComponent(rows[0].id)}">🗺️ ${s.openMap}</a><button class="btn s" id="share">⤴ ${s.share}</button></div>`;
-  h += `<h2>${s.townBeachesH}</h2><table><tr><th>${s.colBeach}</th><th>${s.colWater}</th><th>${s.colQ}</th></tr>${rows.map(r => `<tr><td><a href="${beachPath(l, r.id, r.raw, t[1])}">${esc(r.name)}</a><br><small class="f">${s.type[r.w]}</small></td><td>${r.tt != null ? `<span class="dot" style="background:${tempColor(r.tt)}"></span>${TH(r.tt, l)}` : "–"}</td><td><span style="white-space:nowrap">${qi(r.q)}${s.q[r.q] || s.q["-"]}</span></td></tr>`).join("")}</table>`;
-  if (t[5]) h += `<h2>${s.townSstH}</h2><table><tr><th>${s.dayH}</th><th>${s.waterH}</th></tr>${t[5].slice(di).map((v, k) => `<tr><td>${k === 0 ? s.today : dayFmt(TW.d[di + k], l)}</td><td><span class="dot" style="background:${tempColor(v)}"></span>${TH(v, l, 1)}</td></tr>`).join("")}</table>`;
+  h += `<h2>${s.townBeachesH}</h2><table><tr><th>${s.colBeach}</th><th>${s.colWater}</th><th>${s.colQ}</th></tr>${rows.map(r => `<tr><td><a href="${beachPath(l, r.id, r.raw, t[1])}">${esc(r.name)}</a>${oneW ? "" : `<br><small class="f">${s.type[r.w]}</small>`}</td><td>${r.tt != null ? `<span class="dot" style="background:${tempColor(r.tt)}"></span>${TH(r.tt, l)}` : "–"}</td><td><span style="white-space:nowrap">${qi(r.q)}${s.q[r.q] || s.q["-"]}</span></td></tr>`).join("")}</table>`;
+  if (t[5]) { const ss = t[5].slice(di), mn = Math.min(...ss), mx = Math.max(...ss);
+    h += `<section class="panel" style="margin-top:22px"><div class="hd"><h2>${s.townSstH}</h2><span>°C${l === "en" ? " (°F)" : ""}</span></div><div class="bars">${ss.map((v, k) => `<div${k === 0 ? ` class="on"` : ""}><em>${nf(v, 1, l)}${l === "en" ? `<br><small class="f">${F(v)}</small>` : ""}</em><i style="height:${Math.round(34 + (v - mn) / ((mx - mn) || 1) * 60)}px;background:${tempColor(v)}"></i><span>${k === 0 ? s.today : dayFmt(TW.d[di + k], l).split(/[ ,]/)[0]}</span></div>`).join("")}</div>${scaleHtml(l)}</section>`; }
   h += climHtml(l, t[8]);
   const wr = rows.find(r => r.b && r.b.wx && r.g.w[r.b.wx]); const wx = wr ? wr.g.w[wr.b.wx].filter(r => r[0] >= today) : null;
-  if (wx && wx.length) h += `<h2>${s.wxH}</h2><table><tr><th>${s.dayH}</th><th></th><th>${s.maxH}</th><th>${s.windH}</th><th>${s.rainH}</th></tr>${wx.map(r => `<tr><td>${r[0] === today ? s.today : dayFmt(r[0], l)}</td><td>${WX(r[4])}</td><td>${TH(r[1], l)}</td><td>${r[2]} m/s</td><td>${r[3] ? r[3] + " mm" : "–"}</td></tr>`).join("")}</table>`;
+  if (wx && wx.length) h += `<section class="panel"><h2>${s.wxH}</h2><div class="wxg">${wx.map(r => `<div>${r[0] === today ? s.today : dayFmt(r[0], l).split(/[ ,]/)[0]}<b>${WX(r[4])} ${nf(r[1], 0, l)}°</b>${r[2]} m/s${r[3] ? `<br>${r[3]} mm` : ""}</div>`).join("")}</div></section>`;
   const near = TW.t.filter(x => x !== t).map(x => [x, hav(t[2], t[3], x[2], x[3])]).sort((a, b) => a[1] - b[1]).slice(0, 8);
   if (near.length) h += `<h2>${s.nearTownsH}</h2><ul class="near">${near.map(([x, d]) => { const v = townTemp(x, di); return `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/"><span>${esc(x[1])}<span class="muted"> · ${nf(d, 0, l)} km · ${s.beachesN(x[4].length)}</span></span><span>${v != null ? `<span class="dot" style="background:${tempColor(v)}"></span>${nf(v, 0, l)} °C` : ""}</span></a></li>`; }).join("")}</ul>`;
   h += `<p><a href="${P(l)}/beaches/${csl}/">${esc(s.allIn(cn))} →</a></p><div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>` + shareJs(l);
@@ -378,13 +380,14 @@ function trip(l, b, g) {
   const x = BOX[l], U = UI[l], [c0, km0] = b.ap[0], a0 = g.a[c0] || [c0, ""], city = a0[1] || a0[0];
   let h = `<p>✈️ ${esc(x.ap(city, c0, km0))}</p>`;
   if (b.ap[1]) { const [c1, km1] = b.ap[1], a1 = g.a[c1] || [c1, ""]; h += `<p>✈️ ${esc(x.big(a1[1] || a1[0], c1, km1))}</p>`; }
-  const any = !!(AFF.flights || AFF.car || AFF.claim);
-  h += AFF.flights ? affB(AFF.flights.replace("{IATA}", c0), esc(x.flights(`${city} (${c0})`)), l)
-    : `<a class="ab" href="https://www.google.com/travel/flights?q=${encodeURIComponent("Flights to " + c0)}" rel="nofollow noopener" target="_blank"><span>${esc(x.flights(`${city} (${c0})`))}</span></a>`;
-  if (AFF.car) h += affB(AFF.car, esc(x.car(city)), l);
-  if (AFF.claim) h += `<span class="ln">${affA(AFF.claim, esc(x.delay.replaceAll("AirHelp", AFF.claimName)), l)}</span>`;
-  h += `<a class="ln" href="${P(l)}/flight-delay/">${x.guide}</a>`;
-  return `<section class="trip"><div class="hd"><h2>${U.tripH}</h2>${any ? `<span>${U.hasAff}</span>` : ""}</div>${h}</section>`;
+  h += AFF.flights ? affB(AFF.flights.replace("{IATA}", c0), U.flBtn, l)
+    : `<a class="ab" href="https://www.google.com/travel/flights?q=${encodeURIComponent("Flights to " + c0)}" rel="nofollow noopener" target="_blank"><span>${U.flBtn}</span></a>`;
+  if (AFF.car) h += affB(AFF.car, U.carBtn, l);
+  // lentokorvaus: kysymys + tieto tekstinä, tarkistus kumppanilinkkinä ja opas samassa kohdassa
+  const dl = x.delay.replaceAll("AirHelp", AFF.claimName || "AirHelp"), cut = dl.lastIndexOf(". ");
+  const dTxt = cut > 0 ? dl.slice(0, cut + 1) : dl, dAct = cut > 0 ? dl.slice(cut + 2) : "";
+  h += `<div style="border-top:1px solid var(--line);margin:14px 0 0;padding:12px 0 0"><p style="margin:0">${esc(dTxt)} <a href="${P(l)}/flight-delay/">${U.rights} →</a></p>${AFF.claim && dAct ? affB(AFF.claim, esc(dAct), l) : ""}</div>`;
+  return `<section class="trip"><div class="hd"><h2>${U.tripH}</h2></div>${h}</section>`;
 }
 
 // ---------- lento-opas ----------
@@ -423,10 +426,11 @@ async function mapPage(env, url, l) {
 
 
 // ---------- vesi kuukausittain (10 v keskiarvo) ----------
+const mShort = (l, i) => l === "fi" ? mName(l, i).slice(0, 3) : mName(l, i, "short").replace(".", "").slice(0, 4);
 function climHtml(l, cl) {
   if (!cl || cl.length !== 12) return "";
   const A = ART[l], mx = Math.max(...cl), mn = Math.min(...cl), iw = cl.indexOf(mx), ic = cl.indexOf(mn), cur = new Date().getUTCMonth();
-  const bars = cl.map((v, i) => `<a href="${P(l)}/sea-temperature/${MONTHS[i]}/"${i === cur ? ` class="on"` : ""} title="${esc(capF(mName(l, i)))}"><em>${Math.round(v)}</em><i style="height:${Math.round(20 + (v - mn) / ((mx - mn) || 1) * 80)}px;background:${tempColor(v)}"></i><span>${esc(mName(l, i, "narrow"))}</span></a>`).join("");
+  const bars = cl.map((v, i) => `<a href="${P(l)}/sea-temperature/${MONTHS[i]}/"${i === cur ? ` class="on"` : ""} title="${esc(capF(mName(l, i)))}"><em>${Math.round(v)}</em><i style="height:${Math.round(20 + (v - mn) / ((mx - mn) || 1) * 80)}px;background:${tempColor(v)}"></i><span>${esc(mShort(l, i))}</span></a>`).join("");
   return `<section class="panel"><div class="hd"><h2>${A.clH}</h2><span>°C</span></div><div class="bars12">${bars}</div><p class="muted" style="margin:10px 0 0">${A.clBest(mIn(l, iw), T(mx, l), mIn(l, ic), T(mn, l))} <span style="color:var(--muted)">${A.clNote(2016, 2025)}.</span></p></section>`;
 }
 
