@@ -4,7 +4,7 @@ import { STR, EV_EN, EV, MAP } from "./i18n.js";
 import { BOX, GUIDE, GUIDE_AH, GUIDE_AH_BTN, PRIV } from "./guide.js";
 import { AFF } from "./affiliates.js";
 import { UI } from "./ui.js";
-import { ART, MONTHS, mIn, mName, capF } from "./articles.js";
+import { ART, DS, MONTHS, mIn, mName, capF } from "./articles.js";
 
 const SITE = "Where to Swim", HOST = "https://wheretoswimtoday.com";
 const LANGS = ["en", "fi", "de", "fr", "es", "it", "nl"];
@@ -212,6 +212,8 @@ async function beach(env, url, l, id) {
     if (tsl) h += `<p style="margin:0 0 18px"><a href="${P(l)}/beaches/${csl}/${tsl}/">${esc(U.allTown(town))} →</a></p>`;
   } else if (tsl) h += `<p><a href="${P(l)}/beaches/${csl}/${tsl}/">${esc(U.allTown(town))} →</a></p>`;
   // lämpimämpää vettä samalla viikolla (sama päivä, sama lähde)
+  const RG = await asset(env, o, "/data/regions.json").catch(() => null), rg = RG && RG.r.find(r => inBox(r, b.la, b.lo));
+  if (rg) h += `<a class="todayb" href="${P(l)}/destination/${rg.s}/"><span><b>${esc(rg.nm[l] || rg.nm.en)}</b><span>${esc(DS[l].inDest(rg.nm[l] || rg.nm.en).replace(" →", ""))}</span></span><em>→</em></a>`;
   if (W && tNow != null) {
     const wd = dIdx(W.d);
     const rows = W.r.filter(r => r[4] && r[4][wd] != null && r[4][wd] >= tNow + 0.5 && !(r[0] === b.c && r[2] === town))
@@ -261,6 +263,8 @@ async function town(env, url, l, csl, tsl) {
   if (t[5]) { const ss = t[5].slice(di), mn = Math.min(...ss), mx = Math.max(...ss);
     h += `<section class="panel" style="margin-top:22px"><div class="hd"><h2>${s.townSstH}</h2><span>°C${l === "en" ? " (°F)" : ""}</span></div><div class="bars">${ss.map((v, k) => `<div${k === 0 ? ` class="on"` : ""}><em>${nf(v, 1, l)}${l === "en" ? `<br><small class="f">${F(v)}</small>` : ""}</em><i style="height:${Math.round(34 + (v - mn) / ((mx - mn) || 1) * 60)}px;background:${tempColor(v)}"></i><span>${k === 0 ? s.today : dayFmt(TW.d[di + k], l).split(/[ ,]/)[0]}</span></div>`).join("")}</div>${scaleHtml(l)}</section>`; }
   h += climHtml(l, t[8]);
+  { const RG = await asset(env, o, "/data/regions.json").catch(() => null), rg = RG && RG.r.find(r => inBox(r, t[2], t[3]));
+    if (rg) h += `<a class="todayb" href="${P(l)}/destination/${rg.s}/"><span><b>${esc(rg.nm[l] || rg.nm.en)}</b><span>${esc(DS[l].inDest(rg.nm[l] || rg.nm.en).replace(" →", ""))}</span></span><em>→</em></a>`; }
   const wr = rows.find(r => r.b && r.b.wx && r.g.w[r.b.wx]); const wx = wr ? wr.g.w[wr.b.wx].filter(r => r[0] >= today) : null;
   if (wx && wx.length) h += `<section class="panel"><h2>${s.wxH}</h2><div class="wxg">${wx.map(r => `<div>${r[0] === today ? s.today : dayFmt(r[0], l).split(/[ ,]/)[0]}<b>${WX(r[4])} ${nf(r[1], 0, l)}°</b>${r[2]} m/s${r[3] ? `<br>${r[3]} mm` : ""}</div>`).join("")}</div></section>`;
   const near = TW.t.filter(x => x !== t).map(x => [x, hav(t[2], t[3], x[2], x[3])]).sort((a, b) => a[1] - b[1]).slice(0, 8);
@@ -439,13 +443,13 @@ const pct = (v, l) => nf(v, 1, l) + (["en", "it", "nl"].includes(l) ? "%" : " %"
 async function monthPage(env, url, l, mi) {
   const A = ART[l], s = STR[l], o = url.origin, path = `/sea-temperature/${MONTHS[mi]}/`;
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
-  const [D, C] = await Promise.all([asset(env, o, "/data/months.json"), countries(env, o)]);
-  const seen = new Set(), rows = [];
-  for (const r of D.r.slice().sort((a, b) => b[6][mi] - a[6][mi])) { if (seen.has(r[4])) continue; seen.add(r[4]); rows.push(r); if (rows.length === 10) break; }
-  const lab = r => r[3] || r[2], sub = r => r[3] ? r[2] : cnameBare(r[0], l), tC = v => `${nf(v, 1, l)} °C`;
+  const R = await asset(env, o, "/data/regions.json");
+  // kohteet (saaret ja rannikot) kuukauden 10 v keskiarvon mukaan; merentakaiset alueet eivät ole "Euroopan" vertailussa
+  const rows = R.r.filter(r => !r.ov && r.cl).map(r => [r.cc, r.s, r.nm[l] || r.nm.en, "", r.s, r.iata, r.cl[0], r.cl[1], r.cl[2]]).sort((a, b) => b[6][mi] - a[6][mi]).slice(0, 10);
+  const lab = r => r[2], sub = r => cnameBare(r[0], l), tC = v => `${nf(v, 1, l)} °C`;
   const mi_ = mIn(l, mi), mN = capF(mName(l, mi)), cur = new Date().getUTCMonth();
   const crumbs = [[s.home, P(l) + "/"], [A.crumb, `${P(l)}/sea-temperature/${MONTHS[cur]}/`], [mN, P(l) + path]];
-  const town = r => `${P(l)}/beaches/${cslugOf(C, r[0])}/${r[1]}/`;
+  const town = r => `${P(l)}/destination/${r[1]}/`;
   let h = crumbHtml(crumbs) + `<h1>${esc(A.mH1(mi_))}</h1><p class="fresh"><span>${A.meta} · <a href="#method">${A.how}</a></span></p>`;
   h += `<section class="hero"><div class="vt"><span>${A.short}</span></div><p style="font-size:17px;line-height:1.45;opacity:1;margin:6px 0 0">${A.ans(mi_, `${esc(lab(rows[0]))}, ${tC(rows[0][6][mi])}`, `${esc(lab(rows[1]))} (${tC(rows[1][6][mi])})`, `${esc(lab(rows[2]))} (${tC(rows[2][6][mi])})`)}</p></section>`;
   const order = [...Array(12).keys()].map(k => (mi + 10 + k) % 12);   // valittu kuukausi näkyviin heti alussa
@@ -453,7 +457,7 @@ async function monthPage(env, url, l, mi) {
   h += `<h2 style="margin:0">${A.rankH}</h2><p class="muted" style="margin:2px 0 8px;font-size:12.5px">${capF(A.avgL)} (${A.rangeT}). ${A.rankNote}</p>`;
   h += `<div class="rk">${rows.map((r, k) => { const v = r[6][mi];
     const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(AFF.flights.replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
-    return `<div class="it${k === 0 ? " top" : ""}"><a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(sub(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(A.byMonth(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
+    return `<div class="it${k === 0 ? " top" : ""}"><a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(sub(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
   h += scaleHtml(l) + `<div style="height:16px"></div>`;
   h += `<a class="todayb" href="${P(l)}/"><span><b>${A.todayH}</b><span>${A.todayS}</span></span><em>${A.mapL}</em></a>`;
   h += `<section class="meth" id="method"><b>${A.how}</b><p>${A.method(mi_)}</p><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section>`;
@@ -462,6 +466,67 @@ async function monthPage(env, url, l, mi) {
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "Article", headline: A.mH1(mi_), inLanguage: l, url: HOST + P(l) + path,
     isBasedOn: "https://marine.copernicus.eu/", publisher: { "@type": "Organization", name: SITE, url: HOST } });
   return page(l, { title: A.mTitle(mi_) + " | " + SITE, desc: A.mDesc(mi_, lab(rows[0]), tC(rows[0][6][mi])), path, head, body: h });
+}
+
+
+// ---------- kohdesivut: saaret ja rannikot (rahasivut: suunnittelija päättää kohteen ja varaa) ----------
+const inBox = (r, la, lo) => r.bb && la >= r.bb[0] && la <= r.bb[2] && lo >= r.bb[1] && lo <= r.bb[3];
+const regT = (R, r) => r.sst ? r.sst[dIdx(R.d)] : null;
+function warmRange(l, cl) {
+  const on = cl.map(v => v >= 20); if (!on.some(Boolean)) return null;
+  if (on.every(Boolean)) return capF(mName(l, 0)) + "–" + mName(l, 11);
+  const start = on.findIndex((v, i) => v && !on[(i + 11) % 12]), runs = [];
+  for (let k = 0, i = start; k < 12; k++, i = (i + 1) % 12) {
+    if (on[i] && !on[(i + 11) % 12]) runs.push([i, i]); else if (on[i]) runs[runs.length - 1][1] = i;
+  }
+  return runs.map(([a, b]) => a === b ? mName(l, a) : `${mName(l, a)}–${mName(l, b)}`).join(", ");
+}
+async function destPage(env, url, l, sl) {
+  const s = STR[l], A = ART[l], D = DS[l], U = UI[l], o = url.origin, path = `/destination/${sl}/`;
+  const [R, C] = await Promise.all([asset(env, o, "/data/regions.json"), countries(env, o)]);
+  const r = R.r.find(x => x.s === sl); if (!r) return notFound(l);
+  if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
+  const n = r.nm[l] || r.nm.en, di = dIdx(R.d), t0 = regT(R, r), today = todayIso(), cb = cnameBare(r.cc, l), csl = cslugOf(C, r.cc);
+  const crumbs = [[s.home, P(l) + "/"], [D.allH, `${P(l)}/destination/`], [n, P(l) + path]];
+  const cl = r.cl ? r.cl[0] : null, mx = cl ? Math.max(...cl) : null, iw = cl ? cl.indexOf(mx) : 0;
+  let h = crumbHtml(crumbs) + `<h1>${esc(D.dTitle(n))}</h1><p class="fresh"><span><b>${U.upd} ${esc(updTxt(R.f, l))}</b> · <a href="${P(l)}/beaches/${csl}/">${esc(cb)}</a></span></p>`;
+  const w0 = r.wx.find(x => x[0] >= today);
+  const chips = `<div class="chips">${w0 ? `<span>${s.wAir} ${nf(w0[1], 0, l)} °C</span><span>${cap(s.wind)} ${w0[2]} m/s</span>` : ""}<span>${qi("E", "#fff")}${r.e5} / ${r.n}</span></div>`;
+  h += t0 != null ? `<section class="hero"><div class="row"><div class="big">${nf(t0, 0, l)}°${l === "en" ? `<small>${F(t0)} °F</small>` : ""}</div><div class="vt"><span>${s.waterToday}</span><b>${cap(s.verdict[vIdx(t0)])}</b></div></div>${chips}<p>${esc(D.dLead(n, r.n, r.e5))}</p></section>`
+    : `<section class="hero"><p>${esc(D.dLead(n, r.n, r.e5))}</p>${chips}</section>`;
+  h += `<div class="cta"><a class="btn p" href="${P(l)}/?b=${encodeURIComponent(r.top[0][0])}"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>${s.openMap}</a><button class="btn s" id="share">${s.share}</button></div>`;
+  // paras aika lähteä → heti perään matka (päätöksen hetki)
+  if (cl) { const wr = warmRange(l, cl); h += climHtml(l, cl).replace("</p></section>", ` <b>${D.warm20}:</b> ${wr ? esc(wr) : esc(D.noWarm)}</p></section>`); }
+  const ap = r.ap.map(([c, city]) => `${esc(city)} (${c})`).join(", ");
+  let tr = `<p>✈️ ${esc(D.apLine(ap))}</p>`;
+  tr += AFF.flights ? affB(AFF.flights.replace("{IATA}", r.iata), U.flBtn, l) : "";
+  tr += AFF.hotels ? affB(AFF.hotels.replace("{CITY}", encodeURIComponent(r.nm.en)), esc(D.hotels(n)), l)
+    : `<a class="ab" href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.nm.en.split(" (")[0])}" rel="nofollow noopener" target="_blank"><span>${esc(D.hotels(n))}</span></a>`;
+  if (AFF.car) tr += affB(AFF.car, U.carBtn, l);
+  tr += `<a class="ln" href="${P(l)}/flight-delay/">${BOX[l].guide}</a>`;
+  h += `<section class="trip"><div class="hd"><h2>${U.tripH}</h2></div>${tr}</section>`;
+  if (r.sst) { const ss = r.sst.slice(di), mn = Math.min(...ss), mx2 = Math.max(...ss);
+    h += `<section class="panel"><div class="hd"><h2>${s.sstH}</h2><span>°C</span></div><div class="bars">${ss.map((v, k) => `<div${k === 0 ? ` class="on"` : ""}><em>${nf(v, 1, l)}</em><i style="height:${Math.round(34 + (v - mn) / ((mx2 - mn) || 1) * 60)}px;background:${tempColor(v)}"></i><span>${k === 0 ? s.today : dayFmt(R.d[di + k], l).split(/[ ,]/)[0]}</span></div>`).join("")}</div>${scaleHtml(l)}</section>`; }
+  const wx = r.wx.filter(x => x[0] >= today);
+  if (wx.length) h += `<section class="panel"><h2>${s.wxH}</h2><div class="wxg">${wx.map(x => `<div>${x[0] === today ? s.today : dayFmt(x[0], l).split(/[ ,]/)[0]}<b>${WX(x[4])} ${nf(x[1], 0, l)}°</b>${x[2]} m/s${x[3] ? `<br>${x[3]} mm` : ""}</div>`).join("")}</div></section>`;
+  h += `<h2>${esc(D.beachesH(n))}</h2><p class="muted" style="margin:0 0 8px">${D.beachesNote}</p><div class="nb">${r.top.map(([id, raw, town, hh]) => `<a href="${beachPath(l, id, raw, town)}"><span class="tt" style="background:var(--soft)">${qi(hh[0])}</span><span class="nm"><b>${esc(dn(raw))}</b><span>${esc(town)} · ${s.q[hh[0]] || s.q["-"]}</span></span></a>`).join("")}</div>`;
+  if (r.tw.length) h += `<h2>${D.townsH}</h2><div class="hist">${r.tw.map(([ts, tn, k]) => `<a href="${P(l)}/beaches/${csl}/${ts}/" style="text-decoration:none"><span>${esc(tn)} · ${k}</span></a>`).join("")}</div>`;
+  const others = R.r.filter(x => x !== r && !x.ov && regT(R, x) != null).sort((a, b) => regT(R, b) - regT(R, a)).slice(0, 6);
+  h += `<h2>${D.othersH}</h2><ul class="near">${others.map(x => `<li><a href="${P(l)}/destination/${x.s}/"><span>${esc(x.nm[l] || x.nm.en)}<span class="muted"> · ${esc(cnameBare(x.cc, l))}</span></span><span><span class="dot" style="background:${tempColor(regT(R, x))}"></span>${nf(regT(R, x), 1, l)} °C</span></a></li>`).join("")}</ul>`;
+  h += `<h2 style="font-size:16px">${A.hub}</h2><div class="mgrid">${MONTHS.map((m, i) => `<a href="${P(l)}/sea-temperature/${m}/">${esc(capF(mName(l, i, "short")))}</a>`).join("")}</div>`;
+  h += `<section class="meth"><b>${A.how}</b><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section><p class="muted" style="font-size:12px">${A.disc}</p>` + shareJs(l);
+  const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "TouristDestination", name: n, url: HOST + P(l) + path, containedInPlace: { "@type": "Country", name: cb } });
+  const desc = t0 != null && cl ? D.dDesc(n, `${nf(t0, 0, l)} °C`, mIn(l, iw), `${nf(mx, 0, l)} °C`) : D.dLead(n, r.n, r.e5);
+  return page(l, { title: D.dTitle(n) + " | " + SITE, desc, path, head, body: h });
+}
+async function destIndex(env, url, l) {
+  const s = STR[l], D = DS[l], o = url.origin, path = "/destination/";
+  if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
+  const R = await asset(env, o, "/data/regions.json");
+  const rows = R.r.slice().sort((a, b) => (regT(R, b) ?? -99) - (regT(R, a) ?? -99));
+  const crumbs = [[s.home, P(l) + "/"], [D.allH, P(l) + path]];
+  let h = crumbHtml(crumbs) + `<h1>${esc(D.allTitle)}</h1><p class="lead">${esc(D.allLead(rows.length))}</p><ul class="near">${rows.map(x => { const t = regT(R, x); return `<li><a href="${P(l)}/destination/${x.s}/"><span>${esc(x.nm[l] || x.nm.en)}<span class="muted"> · ${esc(cnameBare(x.cc, l))}</span></span><span>${t != null ? `<span class="dot" style="background:${tempColor(t)}"></span>${nf(t, 1, l)} °C` : ""}</span></a></li>`; }).join("")}</ul>`;
+  return page(l, { title: D.allTitle + " | " + SITE, desc: D.allLead(rows.length), path, head: crumbLd(crumbs), body: h });
 }
 
 // ---------- vuosiraportti: Euroopan puhtaimmat rannat ----------
@@ -493,7 +558,7 @@ async function reportPage(env, url, l) {
 }
 
 // ---------- reititys ----------
-const DYN = /^\/(beach|beaches|embed|flight-delay|privacy|sea-temperature|reports)(\/|$)/;
+const DYN = /^\/(beach|beaches|embed|flight-delay|privacy|sea-temperature|reports|destination|kohde)(\/|$)/;
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -519,6 +584,9 @@ export default {
       else if ((m = path.match(/^\/sea-temperature\/([a-z]+)\/?$/)) && MONTHS.includes(m[1])) res = await monthPage(env, url, l, MONTHS.indexOf(m[1]));
       else if (/^\/sea-temperature\/?$/.test(path)) res = Response.redirect(HOST + P(l) + `/sea-temperature/${MONTHS[new Date().getUTCMonth()]}/`, 302);
       else if (/^\/reports\/cleanest-beaches\/?$/.test(path)) res = await reportPage(env, url, l);
+      else if (/^\/destination\/?$/.test(path)) res = await destIndex(env, url, l);
+      else if ((m = path.match(/^\/destination\/([a-z0-9-]+)\/?$/))) res = await destPage(env, url, l, m[1]);
+      else if ((m = path.match(/^\/kohde\/([a-z0-9-]+)\/?$/))) res = Response.redirect(HOST + P(l) + `/destination/${m[1]}/`, 301);
       else if (/^\/embed\/?$/.test(path)) res = await embedPage(env, url, l);
       else if ((m = path.match(/^\/embed\/([^/]+)\/?$/))) res = await widget(env, url, LANGS.includes(wl) ? wl : l, decodeURIComponent(m[1]));
       else res = notFound(l);

@@ -134,6 +134,48 @@ with open("site/data/cleanest-beaches-2021-2025.csv", "w") as fh:
         fh.write(f"{CNAME[cc]},{r[0]},{r[1]},{round(r[1] / r[0] * 100, 1)},{r[2]},{r[3]}\n")
 print("raportti", tot)
 
+# --- lomakohteet (saaret ja rannikot): kohdesivut 7 kielellä ---
+import sys, statistics as st
+from collections import Counter
+sys.path.insert(0, os.path.dirname(__file__)); from dest import DEST, names, OVERSEAS
+sym_ = sym
+regs = []
+for d_ in DEST:
+    sl, en, fi, bb, iata = d_[0], d_[1], d_[2], d_[3], d_[4]
+    ix = [i for i, s_ in enumerate(S) if s_[3] in "CT" and bb[0] <= s_[4] <= bb[2] and bb[1] <= s_[5] <= bb[3]]
+    if len(ix) < 3: continue
+    cc = Counter(S[i][10] for i in ix).most_common(1)[0][0]
+    ss = [T["sst"][i][0] for i in ix if T["sst"][i]]
+    sst = [round(st.median(v[k] for v in ss), 1) for k in range(len(dates))] if ss else None
+    wd = {}
+    for i in ix:
+        c = T["wx_cell"][i]
+        if c is not None:
+            for r in T["wx"][c]: wd.setdefault(r[0], []).append(r)
+    wx = [[dd, round(st.median(r[1] for r in wd[dd])), round(st.median(r[3] for r in wd[dd])), round(st.median(r[4] for r in wd[dd])),
+           sym_(Counter(r[5] for r in wd[dd] if r[5]).most_common(1)[0][0]) if any(r[5] for r in wd[dd]) else None] for dd in sorted(wd)]
+    cls = [CL[S[i][0]] for i in ix if S[i][0] in CL]
+    clim = [[round(float(np.median([c[k][j] for c in cls])), 1) for j in range(12)] for k in range(3)] if cls else None
+    t0 = lambda i: T["sst"][i][0][0] if T["sst"][i] else -99
+    seen, top = set(), []
+    for i in sorted(ix, key=lambda i: (S[i][6] != "EEEEE", S[i][6][0] != "E", -t0(i))):
+        if S[i][2] in seen and len(ix) > 12: continue
+        seen.add(S[i][2]); top.append([S[i][0], S[i][1], S[i][2], S[i][6]])
+        if len(top) == 6: break
+    tc = Counter(S[i][2] for i in ix if S[i][2] and tslug(S[i][2]))
+    twn = [[tslug(n), n, k] for n, k in tc.most_common(8)]
+    apc = Counter(AP[api[i]][0] for i in ix)
+    apm = {r[0]: r for r in AP}
+    # pääkenttä (lennot) ensin, sitten rannoille lähin muu kenttä
+    aps = ([[iata, apm[iata][2] or apm[iata][1]]] if iata in apm else []) + [[c, apm[c][2] or apm[c][1]] for c, _ in apc.most_common(3) if c != iata][:1]
+    regs.append({"s": sl, "bb": bb, "cc": cc, "iata": iata, "nm": names(d_), "ov": sl in OVERSEAS, "n": len(ix),
+                 "e25": sum(S[i][6][0] == "E" for i in ix), "e5": sum(S[i][6] == "EEEEE" for i in ix),
+                 "sst": sst, "wx": wx, "cl": clim, "top": top, "tw": twn, "ap": aps})
+json.dump({"d": dates, "f": T["wx_fetched"], "r": regs}, open("site/data/regions.json", "w"), separators=(",", ":"), ensure_ascii=False)
+print(len(regs), "lomakohdetta")
+DEST_SLUGS = [r["s"] for r in regs]
+
+
 # --- sitemap-indeksi ---
 B = "https://wheretoswimtoday.com"
 urls = [f"{B}/"]
@@ -147,6 +189,8 @@ for L in LANGS:
     urls.append(f"{B}{p}/reports/cleanest-beaches/")
     for m in ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]:
         urls.append(f"{B}{p}/sea-temperature/{m}/")
+    urls.append(f"{B}{p}/destination/")
+    for d_ in DEST_SLUGS: urls.append(f"{B}{p}/destination/{d_}/")
     for c in countries: urls.append(f"{B}{p}/beaches/{c[1]}/")
     for (cc, sl) in sorted(towns):
         urls.append(f"{B}{p}/beaches/{slug(CNAME[cc])}/{sl}/")

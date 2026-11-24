@@ -1,6 +1,6 @@
 """Staattiset SEO-sivut päivän datasta:
 - /warm-sea-now/  ja /fi/lammin-meri-nyt/      lomakohteiden ranking veden lämpötilan mukaan
-- /destination/<slug>/ ja /fi/kohde/<slug>/   kohdesivut (rannat, sää, lennot, majoitus)
+- /destination/<slug>/ ja /fi/destination/<slug>/   kohdesivut (rannat, sää, lennot, majoitus)
 - /fi/avanto/ ja /fi/avanto/<kunta>/          talviuintipaikat (Lipas) + veden lämpötila ja sää
 Kirjoittaa tiedostot hakemistoon site/pages/ ja listan site/pages_urls.txt sivukarttaa varten."""
 import json, os, re, html, unicodedata, statistics as st, datetime as dt, urllib.parse
@@ -108,46 +108,7 @@ def page(path, lang, ttl, desc, body, alt=None, ld=None, canonical=None):
 URLS = []
 
 # ---------------------------------------------------------------- lomakohteet
-DEST = [  # (slug, EN, FI, [lat1, lon1, lat2, lon2], IATA, maa EN, maa FI)
- ("tenerife", "Tenerife", "Teneriffa", [27.98, -16.95, 28.6, -16.1], "TFS", "Spain", "Espanja"),
- ("gran-canaria", "Gran Canaria", "Gran Canaria", [27.7, -15.85, 28.2, -15.35], "LPA", "Spain", "Espanja"),
- ("lanzarote", "Lanzarote", "Lanzarote", [28.8, -13.9, 29.25, -13.4], "ACE", "Spain", "Espanja"),
- ("fuerteventura", "Fuerteventura", "Fuerteventura", [28.0, -14.55, 28.78, -13.8], "FUE", "Spain", "Espanja"),
- ("madeira", "Madeira", "Madeira", [32.6, -17.3, 33.1, -16.2], "FNC", "Portugal", "Portugali"),
- ("azores", "Azores", "Azorit", [36.9, -31.3, 39.8, -25.0], "PDL", "Portugal", "Portugali"),
- ("algarve", "Algarve", "Algarve", [36.9, -9.0, 37.3, -7.3], "FAO", "Portugal", "Portugali"),
- ("lisbon-coast", "Lisbon coast", "Lissabonin rannikko", [38.4, -9.6, 39.0, -8.9], "LIS", "Portugal", "Portugali"),
- ("costa-del-sol", "Costa del Sol", "Costa del Sol", [36.2, -5.4, 36.9, -3.5], "AGP", "Spain", "Espanja"),
- ("costa-blanca", "Costa Blanca", "Costa Blanca", [37.8, -0.9, 38.9, 0.3], "ALC", "Spain", "Espanja"),
- ("barcelona", "Barcelona", "Barcelona", [41.2, 1.9, 41.55, 2.4], "BCN", "Spain", "Espanja"),
- ("costa-brava", "Costa Brava", "Costa Brava", [41.6, 2.7, 42.45, 3.35], "GRO", "Spain", "Espanja"),
- ("mallorca", "Mallorca", "Mallorca", [39.2, 2.3, 40.0, 3.5], "PMI", "Spain", "Espanja"),
- ("ibiza", "Ibiza", "Ibiza", [38.8, 1.15, 39.15, 1.65], "IBZ", "Spain", "Espanja"),
- ("menorca", "Menorca", "Menorca", [39.8, 3.75, 40.1, 4.35], "MAH", "Spain", "Espanja"),
- ("malta", "Malta", "Malta", [35.78, 14.15, 36.1, 14.6], "MLA", "Malta", "Malta"),
- ("larnaca-ayia-napa", "Larnaca & Ayia Napa", "Larnaka ja Ayia Napa", [34.85, 33.5, 35.1, 34.1], "LCA", "Cyprus", "Kypros"),
- ("limassol-paphos", "Limassol & Paphos", "Limassol ja Pafos", [34.6, 32.3, 34.9, 33.2], "PFO", "Cyprus", "Kypros"),
- ("crete", "Crete", "Kreeta", [34.8, 23.4, 35.7, 26.4], "HER", "Greece", "Kreikka"),
- ("rhodes", "Rhodes", "Rodos", [35.85, 27.65, 36.5, 28.3], "RHO", "Greece", "Kreikka"),
- ("kos", "Kos", "Kos", [36.65, 26.9, 36.95, 27.4], "KGS", "Greece", "Kreikka"),
- ("corfu", "Corfu", "Korfu", [39.35, 19.6, 39.85, 20.15], "CFU", "Greece", "Kreikka"),
- ("zakynthos", "Zakynthos", "Zakynthos", [37.6, 20.6, 37.95, 21.0], "ZTH", "Greece", "Kreikka"),
- ("athens-riviera", "Athens Riviera", "Ateenan rivieera", [37.6, 23.4, 38.0, 24.1], "ATH", "Greece", "Kreikka"),
- ("halkidiki", "Halkidiki", "Halkidiki", [39.9, 23.2, 40.45, 24.4], "SKG", "Greece", "Kreikka"),
- ("sicily", "Sicily", "Sisilia", [36.6, 12.3, 38.4, 15.7], "CTA", "Italy", "Italia"),
- ("sardinia", "Sardinia", "Sardinia", [38.8, 8.1, 41.3, 9.9], "CAG", "Italy", "Italia"),
- ("amalfi-naples", "Naples & Amalfi Coast", "Napoli ja Amalfin rannikko", [40.5, 13.8, 40.9, 14.8], "NAP", "Italy", "Italia"),
- ("cote-d-azur", "Côte d'Azur (Nice)", "Côte d'Azur (Nizza)", [43.3, 6.6, 43.8, 7.6], "NCE", "France", "Ranska"),
- ("corsica", "Corsica", "Korsika", [41.3, 8.4, 43.1, 9.7], "AJA", "France", "Ranska"),
- ("split-dalmatia", "Split & Dalmatia", "Split ja Dalmatia", [43.2, 15.8, 43.6, 16.9], "SPU", "Croatia", "Kroatia"),
- ("dubrovnik", "Dubrovnik", "Dubrovnik", [42.5, 17.6, 42.8, 18.6], "DBV", "Croatia", "Kroatia"),
- ("istria", "Istria", "Istria", [44.75, 13.45, 45.55, 14.0], "PUY", "Croatia", "Kroatia"),
- ("albanian-riviera", "Albanian Riviera", "Albanian Riviera", [39.6, 19.4, 40.5, 20.1], "TIA", "Albania", "Albania"),
- ("bulgarian-black-sea", "Bulgarian Black Sea", "Bulgarian Mustanmeren rannikko", [42.0, 27.3, 43.6, 28.7], "BOJ", "Bulgaria", "Bulgaria"),
- ("guadeloupe", "Guadeloupe", "Guadeloupe", [15.8, -61.9, 16.6, -61.0], "PTP", "France (Caribbean)", "Ranska (Karibia)"),
- ("martinique", "Martinique", "Martinique", [14.35, -61.25, 14.9, -60.8], "FDF", "France (Caribbean)", "Ranska (Karibia)"),
- ("reunion", "Réunion", "Réunion", [-21.4, 55.2, -20.85, 55.85], "RUN", "France (Indian Ocean)", "Ranska (Intian valtameri)"),
-]
+from dest import DEST
 dest = []
 for sl, en, fi, bb, iata, cen, cfi in DEST:
     idx = [i for i, s in enumerate(S) if s[3] in "CT" and bb[0] <= s[4] <= bb[2] and bb[1] <= s[5] <= bb[3] and T["sst"][i]]
@@ -199,7 +160,7 @@ for lang in ("fi", "en"):
         cols = ["#", "Destination", "Water today", "Week", "Air", ""]
     rows = ""
     for k, d in enumerate(dest, 1):
-        dp = f"/fi/kohde/{d['slug']}/" if lang == "fi" else f"/destination/{d['slug']}/"
+        dp = f"/fi/destination/{d['slug']}/" if lang == "fi" else f"/destination/{d['slug']}/"
         rows += (f"<tr><td>{k}</td><td><a href='{dp}'>{e(nm(d))}</a><div class='muted'>{e(d['cfi'] if lang == 'fi' else d['cen'])}</div></td>"
                  f"<td class='t'><span class='dot' style='background:{tcol(d['t'])}'></span>{fmt(d['t'], lang)} °C</td>"
                  f"<td class='muted'>{trend_txt(d['trend'], lang)}</td><td>{(wxe(d['sym'][0]) + ' ' + str(d['air'][0]) + '°') if d['air'] else '–'}</td>"
@@ -211,55 +172,9 @@ for lang in ("fi", "en"):
             + ("<div class='disc'>Tiedot ovat suuntaa antavia. Rantaveden lämpötila voi poiketa mallin arvosta, ja uimassa käydään omalla vastuulla: noudata paikallisia lippuja ja uimakieltoja.</div>" if lang == "fi"
                else "<div class='disc'>Indicative information only. Water at the beach can differ from the model value, and you swim at your own risk: follow local flags and bathing bans.</div>"))
     ld = {"@context": "https://schema.org", "@type": "ItemList", "name": ttl, "itemListElement": [
-        {"@type": "ListItem", "position": k, "name": nm(d), "url": BASE + (f"/fi/kohde/{d['slug']}/" if lang == "fi" else f"/destination/{d['slug']}/")} for k, d in enumerate(dest, 1)]}
+        {"@type": "ListItem", "position": k, "name": nm(d), "url": BASE + (f"/fi/destination/{d['slug']}/" if lang == "fi" else f"/destination/{d['slug']}/")} for k, d in enumerate(dest, 1)]}
     page(hub, lang, ttl, desc, body, {"fi": "/fi/lammin-meri-nyt/", "en": "/warm-sea-now/"}, ld)
-    # kohdesivut
-    for d in dest:
-        path = f"/fi/kohde/{d['slug']}/" if lang == "fi" else f"/destination/{d['slug']}/"
-        alt = {"fi": f"/fi/kohde/{d['slug']}/", "en": f"/destination/{d['slug']}/"}
-        n = nm(d)
-        if lang == "fi":
-            ttl = f"Meriveden lämpötila {n} tänään – {fmt(d['t'], lang)} °C | Where to Swim"
-            desc = f"{n}: meri on tänään noin {fmt(d['t'], lang)} °C ({verdict(d['t'], lang)}). Viikon ennuste, sää, {d['n']} virallista uimarantaa ja niiden EU-vedenlaatu."
-            lead = (f"Meriveden lämpötila kohteessa {e(n)} on tänään noin <b>{fmt(d['t'], lang)} °C</b> – {verdict(d['t'], lang)}. "
-                    + (f"Rannasta riippuen vesi on {fmt(d['tmin'], lang)}–{fmt(d['tmax'], lang)} °C. " if round(d['tmin']) != round(d['tmax']) else "") + trend_sentence(d['trend'], lang)
-                    + f"Alueella on {d['n']} virallista EU-uimarantaa, joista {d['exc']} on vedenlaadultaan erinomaisia.")
-        else:
-            ttl = f"Sea temperature in {n} today – {fmt(d['t'], lang)} °C | Where to Swim"
-            desc = f"{n}: the sea is about {fmt(d['t'], lang)} °C today ({verdict(d['t'], lang)}). 7-day forecast, weather and {d['n']} official beaches with EU water quality."
-            lead = (f"The sea temperature in {e(n)} is about <b>{fmt(d['t'], lang)} °C</b> today – {verdict(d['t'], lang)}. "
-                    + (f"Depending on the beach it ranges from {fmt(d['tmin'], lang)} to {fmt(d['tmax'], lang)} °C. " if round(d['tmin']) != round(d['tmax']) else "") + trend_sentence(d['trend'], lang)
-                    + f"The area has {d['n']} official EU bathing waters, {d['exc']} of them with excellent water quality.")
-        rank = dest.index(d) + 1
-        cards = (f"<div class='cards'><div class='card'><div class='k'>{'Vesi tänään' if lang == 'fi' else 'Water today'}</div><div class='v' style='color:{tcol(d['t'])}'>{fmt(d['t'], lang)} °C</div><div class='x'>{'sijalla' if lang == 'fi' else 'rank'} {rank}/{len(dest)}</div></div>"
-                 f"<div class='card'><div class='k'>{'Ilma tänään' if lang == 'fi' else 'Air today'}</div><div class='v'>{(wxe(d['sym'][0]) + ' ' + str(d['air'][0]) + '°') if d['air'] else '–'}</div><div class='x'>{'päivän ylin' if lang == 'fi' else 'daily max'}</div></div>"
-                 f"<div class='card'><div class='k'>{'Rannat' if lang == 'fi' else 'Beaches'}</div><div class='v'>{d['n']}</div><div class='x'>{d['exc']} {'erinomaista' if lang == 'fi' else 'excellent'}</div></div></div>")
-        place = n.split(" (")[0]
-        cta = (f"<div class='cta'><a class='btn p' href='{e(flights_url(d['en'], d['iata'], lang))}' rel='nofollow sponsored' target='_blank'>✈︎ {'Hae lentoja' if lang == 'fi' else 'Find flights'}</a>{aff_tag('flights', lang)}"
-               f"<a class='btn s' href='{e(hotels_url(d['en'].split(' (')[0]))}' rel='nofollow sponsored' target='_blank'>🏨 {'Majoitus' if lang == 'fi' else 'Hotels'}</a>"
-               f"<a class='btn s' href='/?b={urllib.parse.quote(S[d['top'][0]][0])}'>🗺️ {'Kartalla' if lang == 'fi' else 'On the map'}</a></div>")
-        fc = ""
-        if d["days"]:
-            fc = (f"<h2>{'Sää ja meri tällä viikolla' if lang == 'fi' else 'Weather and sea this week'}</h2><table><tr><th>{'Päivä' if lang == 'fi' else 'Day'}</th><th></th><th>{'Ilma' if lang == 'fi' else 'Air'}</th><th>{'Sade' if lang == 'fi' else 'Rain'}</th><th>{'Meri' if lang == 'fi' else 'Sea'}</th></tr>")
-            for k2, day in enumerate(d["days"]):
-                si = T["sst_dates"].index(day) if day in T["sst_dates"] else None
-                sea = st.median(T["sst"][i][0][si] for i in [i for i in range(len(S)) if False]) if False else None
-                if si is not None:
-                    vals = [T["sst"][i][0][si] for i in d["top"]]; sea = st.median(vals)
-                fc += (f"<tr><td>{dlabel(day, lang)}</td><td>{wxe(d['sym'][k2])}</td><td>{d['air'][k2]} °C</td><td>{(fmt(d['rain'][k2], lang) + ' mm') if d['rain'][k2] >= 0.5 else '–'}</td>"
-                       f"<td>{(fmt(sea, lang, 1) + ' °C') if sea is not None else '–'}</td></tr>")
-            fc += "</table>"
-        tb = (f"<h2>{'Parhaat uimarannat' if lang == 'fi' else 'Best beaches'} – {e(n)}</h2><table><tr><th>{'Ranta' if lang == 'fi' else 'Beach'}</th><th>{'Vesi' if lang == 'fi' else 'Water'}</th><th class='hide-s'>{'EU-laatu' if lang == 'fi' else 'EU quality'}</th></tr>"
-              + "".join(f"<tr><td><a href='{beach_url(S[i])}'>{e(title(S[i][1]))}</a><div class='muted'>{e(S[i][2])}</div></td><td class='t'><span class='dot' style='background:{tcol(T['sst'][i][0][D0])}'></span>{fmt(T['sst'][i][0][D0], lang, 1)} °C</td>"
-                        f"<td class='hide-s'><span class='dot' style='background:{Q.get(S[i][6][0], Q['-'])[2]}'></span>{qname(S[i][6][0], lang)}</td></tr>" for i in d["top"]) + "</table>")
-        others = [x for x in dest if x is not d][:6]
-        oth = (f"<h2>{'Muut lämpimät kohteet nyt' if lang == 'fi' else 'Other warm destinations now'}</h2><table>"
-               + "".join(f"<tr><td><a href='{('/fi/kohde/' if lang == 'fi' else '/destination/') + x['slug'] + '/'}'>{e(nm(x))}</a></td><td class='t'>{fmt(x['t'], lang)} °C</td></tr>" for x in others) + "</table>")
-        body = (f"<p class='upd'>{e(d['cfi'] if lang == 'fi' else d['cen'])} · {upd[lang]}</p><h1>{e(ttl.split(' | ')[0])}</h1><p class='lead'>{lead}</p>{cards}{cta}{fc}{tb}{oth}"
-                + ("<div class='disc'>Tiedot ovat suuntaa antavia. Uimassa käydään omalla vastuulla: noudata paikallisia lippuja ja uimakieltoja. Lento- ja majoituslinkit voivat olla kumppanilinkkejä.</div>" if lang == "fi"
-                   else "<div class='disc'>Indicative information only. You swim at your own risk: follow local flags and bathing bans. Flight and hotel links may be affiliate links.</div>"))
-        ld = {"@context": "https://schema.org", "@type": "TouristDestination", "name": n, "url": BASE + path}
-        page(path, lang, ttl, desc, body, alt, ld)
+    # kohdesivut tekee nyt worker 7 kielellä (/destination/<slug>/, /<kieli>/destination/<slug>/)
 
 # ---------------------------------------------------------------- avannot
 places = AV["places"]; adates = AV["sea_dates"]; a0 = adates.index(TODAY) if TODAY in adates else 0
