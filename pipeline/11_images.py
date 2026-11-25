@@ -20,16 +20,24 @@ def get(url):
             print("yritys", k + 1, e, file=sys.stderr); time.sleep(5 * (k + 1))
     raise RuntimeError("haku epäonnistui")
 old = json.load(open(OUT)) if os.path.exists(OUT) else {}
-try:
-    q = get("https://en.wikivoyage.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "prop": "pageprops", "ppprop": "page_image_free",
+BAD = re.compile(r"map|locator|location|relief|karte|carte|mapa|flag|coat_of_arms|logo|\.svg$|\.png$|\.gif$|\.tif", re.I)
+def page_images(api):
+    q = get(api + "?" + urllib.parse.urlencode({"action": "query", "prop": "pageprops", "ppprop": "page_image_free",
             "redirects": 1, "format": "json", "formatversion": 2, "titles": "|".join(TITLES.values())}))["query"]
     alias = {x["from"]: x["to"] for x in q.get("normalized", []) + q.get("redirects", [])}
-    banner = {p["title"]: p.get("pageprops", {}).get("page_image_free") for p in q["pages"]}
-    files = {}
+    img = {p["title"]: p.get("pageprops", {}).get("page_image_free") for p in q["pages"]}
+    res = {}
     for sl, t in TITLES.items():
-        t2 = alias.get(alias.get(t, t), alias.get(t, t))
-        b = banner.get(t2)
-        if b: files[sl] = "File:" + b
+        t2 = alias.get(alias.get(t, t), alias.get(t, t)); f = img.get(t2)
+        if f and not BAD.search(f): res[sl] = "File:" + f
+    return res
+try:
+    # 1) Wikivoyagen artikkelin kuva, 2) puuttuvat/kartat: Wikipedian artikkelin kuva (vain valokuvat, ei karttoja)
+    files = page_images("https://en.wikivoyage.org/w/api.php")
+    try:
+        wp = page_images("https://en.wikipedia.org/w/api.php")
+        for sl, f in wp.items(): files.setdefault(sl, f)
+    except Exception as e: print("wikipedia:", e)
     ii = get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "prop": "imageinfo", "iiprop": "url|extmetadata|size",
              "iiurlwidth": 1600, "format": "json", "formatversion": 2, "titles": "|".join(sorted(set(files.values())))}))["query"]
     norm = {x["from"]: x["to"] for x in ii.get("normalized", [])}
