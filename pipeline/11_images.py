@@ -37,6 +37,8 @@ QUERY = {"tenerife": "Playa de las Teresitas", "lanzarote": "Playa Papagayo Lanz
          "larnaca-ayia-napa": "Ayia Napa beach", "limassol-paphos": "Coral Bay Cyprus", "athens-riviera": "Vouliagmeni beach", "amalfi-naples": "Amalfi coast",
          "cote-d-azur": "Nice Promenade des Anglais beach", "split-dalmatia": "Split Croatia beach", "istria": "Rovinj", "albanian-riviera": "Ksamil beach",
          "bulgarian-black-sea": "Sozopol beach", "halkidiki": "Halkidiki beach"}
+# käsin valitut (haku antoi väärän aiheen); None = ei kuvaa ennemmin kuin väärä kuva
+PIN = {"tenerife": "File:Vista de Garachico, Tenerife, España, 2012-12-13, DD 05.jpg", "lanzarote": None, "bulgarian-black-sea": None}
 def commons_search(q):
     r = get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "list": "search", "srnamespace": 6, "srlimit": 8,
             "format": "json", "formatversion": 2, "srsearch": f'{q} filetype:bitmap incategory:"Quality_images"'}))
@@ -45,12 +47,14 @@ try:
     # 1) Wikivoyagen artikkelin kuva, 2) puuttuvat/kartat: Wikipedian artikkelin kuva (vain valokuvat, ei karttoja)
     cand = {}
     for sl, t in TITLES.items():
+        if sl in PIN: cand[sl] = [PIN[sl]] if PIN[sl] else []; continue
         try: cand[sl] = commons_search(QUERY.get(sl, t + " beach"))[:5]
         except Exception as e: print("haku", sl, e); cand[sl] = []
         time.sleep(1)
     try: vo = page_images("https://en.wikivoyage.org/w/api.php")
     except Exception as e: print("wikivoyage:", e); vo = {}
-    for sl, f in vo.items(): cand.setdefault(sl, []).append(f)
+    for sl, f in vo.items():
+        if sl not in PIN: cand.setdefault(sl, []).append(f)
     allf = sorted({f for v in cand.values() for f in v})
     info, norm = {}, {}
     for k in range(0, len(allf), 50):
