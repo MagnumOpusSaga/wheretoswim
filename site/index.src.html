@@ -18,7 +18,7 @@
 <style>/*LEAFLET_CSS*/</style>
 <style>
 :root{
-  --sea:#d5e9f3; --land:#f6f3ec; --land2:#ece8df; --ink:#0F2533; --muted:#6A5A45; --line:#E6DCCB;
+  --sea:#B7DCEB; --land:#F7F0E2; --land2:#EDE6D7; --ink:#0F2533; --muted:#6A5A45; --line:#E6DCCB;
   --card:#ffffff; --accent:#0B63A8; --accent-soft:#E3F0FA; --sand:#FBF7F1; --chip:#EFE7DA;
   --q-E:#0B63A8; --q-G:#6FA3D2; --q-S:#D9822B; --q-P:#8E2A12; --q-N:#9AA0A6;
   --shadow:0 6px 24px rgba(15,37,51,.16);
@@ -37,7 +37,7 @@ html,body{margin:0;height:100%;font-family:var(--font);color:var(--ink);backgrou
 @media(max-width:420px){.brand{font-size:13px}.brand small{font-size:10.5px}.iconbtn{width:34px}}
 @media(min-width:760px){.top{right:auto;width:600px}}
 .bar{display:flex;align-items:center;gap:8px;background:var(--card);border-radius:14px;box-shadow:var(--shadow);padding:6px 6px 6px 12px}
-.brand{font-weight:750;font-size:14px;letter-spacing:-.01em;white-space:nowrap}
+.logo{flex:none;width:30px;height:30px;border-radius:8px;margin-left:-4px}.brand{font-weight:750;font-size:14px;letter-spacing:-.01em;white-space:nowrap}
 .brand small{display:block;font-weight:500;font-size:11px;color:var(--muted);letter-spacing:0}
 .search{flex:1;min-width:0;position:relative}
 .search input{width:100%;border:1px solid var(--line);background:var(--sand);border-radius:10px;padding:9px 10px;font-size:15px;font-family:inherit;color:var(--ink);outline:none}
@@ -75,8 +75,9 @@ select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;backgroun
 .days button.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .count{color:var(--muted);font-weight:500}
 
-.layerbtn{position:fixed;right:10px;bottom:120px;z-index:950;height:44px;padding:0 14px 0 10px;border:0;border-radius:22px;background:#fff;box-shadow:var(--shadow);font:inherit;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:6px}
-.layerbtn .ic{font-size:20px;line-height:1}
+.layerbtn{position:fixed;right:10px;bottom:120px;z-index:950;width:48px;height:48px;padding:0;border:0;border-radius:50%;background:#fff;box-shadow:var(--shadow);font:inherit;color:var(--ink);cursor:pointer;display:flex;align-items:center;justify-content:center}
+.layerbtn .sr,#locTxt{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.layerbtn .ic{display:flex;line-height:1}
 .locbtn.busy .ic{animation:pulse 1s infinite}@keyframes pulse{50%{opacity:.3}}
 .nlist{list-style:none;margin:0;padding:0}.nlist li{border-bottom:1px solid var(--line)}
 .nlist button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:#fff;padding:11px 2px;font:inherit;cursor:pointer;color:var(--ink)}
@@ -147,7 +148,7 @@ select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;backgroun
 
 <div class="top">
   <div class="bar">
-    <div class="brand">Where to Swim<small data-t="sub"></small></div>
+    <img class="logo" src="/favicon.svg" alt="" width="30" height="30"><div class="brand">Where to Swim<small data-t="sub"></small></div>
     <div class="search">
       <input id="q" type="search" autocomplete="off">
       <div class="results" id="results"></div>
@@ -174,7 +175,7 @@ select.chip{appearance:none;-webkit-appearance:none;padding-right:26px;backgroun
 <div class="legend" id="legend"></div>
 <div class="toast" id="toast"></div>
 <button class="layerbtn" id="satBtn" aria-label="Satellite"></button>
-<button class="layerbtn locbtn" id="locBtn" aria-label="My location"><span class="ic">📍</span><span id="locTxt"></span></button>
+<button class="layerbtn locbtn" id="locBtn" aria-label="My location"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0B63A8" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></span><span id="locTxt"></span></button>
 
 <div class="sheet" id="sheet" aria-hidden="true">
   <div class="grab"></div>
@@ -613,7 +614,7 @@ function restyle(){
 }
 function placeLayerBtn(){ const lg=document.getElementById("legend"), b=document.getElementById("satBtn");
   const wide = window.innerWidth>=760, base = wide ? 22 : lg.offsetHeight+30; b.style.bottom = base+"px";
-  const lb=document.getElementById("locBtn"); if(lb) lb.style.bottom = (base+52)+"px"; }
+  const lb=document.getElementById("locBtn"); if(lb) lb.style.bottom = (base+58)+"px"; }
 window.addEventListener("resize", placeLayerBtn);
 function legend(n){
   lastN=n;
@@ -804,7 +805,10 @@ function setSat(on){
   satLayer.eachLayer(l=>l.bringToBack && l.bringToBack()); restyle();
 }
 document.getElementById("satBtn").onclick=()=>setSat(!sat);
-function satLabel(){ document.getElementById("satBtn").innerHTML = sat ? `<span class="ic">🗺️</span>${L_().mapv}` : `<span class="ic">🛰️</span>${L_().sat}`; }
+function satLabel(){ const b=document.getElementById("satBtn"), t = sat ? L_().mapv : L_().sat;
+  b.innerHTML = (sat ? `<span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F2533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg></span>`
+    : `<span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0F2533" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5z"/><path d="m3 13 9 5 9-5"/></svg></span>`) + `<span class="sr">${t}</span>`;
+  b.setAttribute("aria-label", t); b.title = t; }
 map.on("click",()=>{ if(current>=0) closeSheet(); });
 applyLang();
 document.getElementById("loading").textContent = L_().loading;
@@ -812,8 +816,8 @@ document.getElementById("loading").textContent = L_().loading;
 Promise.all(["/data/basemap.json","/data/sites.json","/data/today.json"].map(u=>fetch(u).then(r=>{if(!r.ok) throw new Error(u); return r.json();})))
 .then(([bm,sites,today])=>{
   S=sites; T=today; normName=S.map(s=>N(s[1])); normCom=S.map(s=>N(s[2])); norm=S.map((s,i)=>normName[i]+" "+normCom[i]);
-  baseLayer = L.geoJSON(bm,{interactive:false, renderer:baseRend, pane:"base",style:f=> f.properties.k==="lake" ? {stroke:false,fillColor:"#d5e9f3",fillOpacity:1}
-       : {color:"#c9c2b3",weight:.7,fillColor:f.properties.c?"#f6f3ec":"#ece8df",fillOpacity:1}});
+  baseLayer = L.geoJSON(bm,{interactive:false, renderer:baseRend, pane:"base",style:f=> f.properties.k==="lake" ? {stroke:false,fillColor:"#B7DCEB",fillOpacity:1}
+       : {color:"#D6C8AC",weight:.7,fillColor:f.properties.c?"#F7F0E2":"#EDE6D7",fillOpacity:1}});
   if(store.get("bwt_sat")==="1") setSat(true); else baseLayer.addTo(map);
   markers = S.map((s,i)=>L.circleMarker([s[4],s[5]],{renderer:rend,radius:radius(),weight:1,color:"#fff",fillOpacity:.95,fillColor:colorOf(i)})
       .on("click",e=>{ L.DomEvent.stopPropagation(e); openSheet(i); }).addTo(map));

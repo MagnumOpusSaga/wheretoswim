@@ -52,6 +52,7 @@ jobs:
         run: |
           python pipeline/05b_today.py
           python pipeline/06_page.py
+          python pipeline/11_images.py
           python pipeline/08_pages.py
           python pipeline/07_beach_shards.py
           bash pipeline/09_dist.sh

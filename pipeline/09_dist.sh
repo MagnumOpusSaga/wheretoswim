@@ -7,7 +7,7 @@ cp site/index.html site/og.png site/favicon.ico site/favicon.svg site/apple-touc
 cp site/sitemap*.xml dist/
 cp site/static/* dist/
 cp worker/_worker.js dist/
-cp site/data/sites.json site/data/today.json site/data/basemap.json site/data/avanto.json site/data/idx.txt site/data/countries.json site/data/warm.json site/data/months.json site/data/regions.json site/data/report.json site/data/cleanest-beaches-2021-2025.csv dist/data/
+cp site/data/sites.json site/data/today.json site/data/basemap.json site/data/avanto.json site/data/idx.txt site/data/countries.json site/data/warm.json site/data/months.json site/data/regions.json site/data/dest_images.json site/data/report.json site/data/cleanest-beaches-2021-2025.csv dist/data/
 cp -r site/data/g site/data/towns dist/data/
 cp -r site/pages/* dist/
 echo "tiedostoja: $(find dist -type f | wc -l)"

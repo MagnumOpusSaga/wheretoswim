@@ -127,6 +127,9 @@ small.aff{font-size:11px;font-weight:500;color:var(--muted);background:var(--chi
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 18px}.stats .bigs{grid-column:1/3;background:var(--accent);color:#fff;border-radius:18px;padding:16px}.stats .bigs b{display:block;font-size:44px;line-height:1;font-weight:800;margin:0 0 4px}.stats div{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px}.stats div b{display:block;font-size:24px;font-weight:800}.stats div span{font-size:12.5px;color:var(--muted)}.stats .bigs span{font-size:14.5px;color:#fff}
 .crank{display:flex;flex-direction:column;gap:2px}.crank div{display:flex;align-items:center;gap:8px;min-height:32px;border-radius:8px;padding:0 6px}.crank div.me{background:var(--soft)}.crank .r{width:22px;font-size:12.5px;font-weight:700;color:var(--muted)}.crank .c{width:96px;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.crank .tr{flex:1;height:10px;background:#F3ECE1;border-radius:5px;overflow:hidden}.crank .tr i{display:block;height:10px;border-radius:5px}.crank .v{width:52px;text-align:right;font-size:14px;font-weight:800}
 .press{background:var(--ink);color:#fff;border-radius:18px;padding:16px;margin:0 0 18px}.press b{display:block;font-size:16px;margin:0 0 4px}.press p{margin:0 0 10px;font-size:14px;opacity:.9}.press .row{display:flex;gap:8px;flex-wrap:wrap}.press a,.press button{min-height:44px;padding:0 14px;border-radius:12px;border:0;font:inherit;font-weight:650;font-size:14px;display:inline-flex;align-items:center;cursor:pointer;text-decoration:none}.press a{background:#fff;color:var(--ink)}.press button{background:transparent;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)}
+.banner{margin:0 0 12px;position:relative;border-radius:18px;overflow:hidden;background:var(--soft)}.banner img{display:block;width:100%;height:200px;object-fit:cover}.banner figcaption{position:absolute;right:8px;bottom:6px;font-size:10.5px;color:#fff;background:rgba(15,37,51,.55);padding:2px 7px;border-radius:7px;max-width:80%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.banner figcaption a{color:#fff}
+.dgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;margin:0 0 18px}.dgrid a{display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden;text-decoration:none;color:var(--ink)}.dgrid a:hover{border-color:var(--accent)}.dgrid img,.dgrid .ph{display:block;width:100%;height:104px;object-fit:cover;background:linear-gradient(160deg,#BFE0EE,#E3F0FA)}.dgrid span{display:flex;justify-content:space-between;gap:6px;padding:8px 10px 0;font-weight:700;font-size:14.5px}.dgrid small{padding:0 10px 9px;color:var(--muted);font-size:12px}
+.rk .img{display:block;width:calc(100% + 28px);margin:-10px -14px 0;height:120px;object-fit:cover}
 footer{max-width:820px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}footer a{color:var(--muted)}footer .langs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px}`;
 
 function page(l, { title: ttl, desc, path, alt = true, head = "", body, status = 200, noindex = false }) {
@@ -446,7 +449,7 @@ const pct = (v, l) => nf(v, 1, l) + (["en", "it", "nl"].includes(l) ? "%" : " %"
 async function monthPage(env, url, l, mi) {
   const A = ART[l], s = STR[l], o = url.origin, path = `/sea-temperature/${MONTHS[mi]}/`;
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
-  const R = await asset(env, o, "/data/regions.json");
+  const [R, IM] = await Promise.all([asset(env, o, "/data/regions.json"), asset(env, o, "/data/dest_images.json").catch(() => ({}))]);
   // kohteet (saaret ja rannikot) kuukauden 10 v keskiarvon mukaan; merentakaiset alueet eivät ole "Euroopan" vertailussa
   const rows = R.r.filter(r => !r.ov && r.cl).map(r => [r.cc, r.s, r.nm[l] || r.nm.en, "", r.s, r.iata, r.cl[0], r.cl[1], r.cl[2]]).sort((a, b) => b[6][mi] - a[6][mi]).slice(0, 10);
   const lab = r => r[2], subT = r => cnameBare(r[0], l), tC = v => `${nf(v, 1, l)} °C`;
@@ -460,11 +463,13 @@ async function monthPage(env, url, l, mi) {
   h += `<h2 style="margin:0">${A.rankH}</h2><p class="muted" style="margin:2px 0 8px;font-size:12.5px">${capF(A.avgL)} (${A.rangeT}). ${A.rankNote}</p>`;
   h += `<div class="rk">${rows.map((r, k) => { const v = r[6][mi];
     const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(sub(AFF.flights, "month").replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
-    return `<div class="it${k === 0 ? " top" : ""}"><a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(subT(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
+    const I = k < 3 && IM[r[1]];
+    return `<div class="it${k === 0 ? " top" : ""}">${I ? `<img class="img" src="${esc(imgSmall(I.u, 800))}" alt="${esc(lab(r))}" loading="${k ? "lazy" : "eager"}" width="800" height="120">` : ""}<a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(subT(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
   h += scaleHtml(l) + `<div style="height:16px"></div>`;
   h += `<a class="todayb" href="${P(l)}/"><span><b>${A.todayH}</b><span>${A.todayS}</span></span><em>${A.mapL}</em></a>`;
   h += `<section class="meth" id="method"><b>${A.how}</b><p>${A.method(mi_)}</p><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section>`;
   h += `<h2 style="font-size:16px">${A.otherM}</h2><div class="mgrid">${MONTHS.map((m, i) => `<a href="${P(l)}/sea-temperature/${m}/"${i === mi ? ` class="on"` : ""}>${esc(capF(mName(l, i, "short")))}</a>`).join("")}</div>`;
+  h += credits(rows.slice(0, 3).filter(r => IM[r[1]]).map(r => [lab(r), IM[r[1]]]), l);
   h += `<p class="muted" style="font-size:12px">${A.disc}</p>`;
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "Article", headline: A.mH1(mi_), inLanguage: l, url: HOST + P(l) + path,
     isBasedOn: "https://marine.copernicus.eu/", publisher: { "@type": "Organization", name: SITE, url: HOST } });
@@ -472,6 +477,10 @@ async function monthPage(env, url, l, mi) {
 }
 
 
+// kohteen bannerikuva (Wikivoyage/Commons, tekijä ja lisenssi näkyvissä); pienempi versio listoihin
+const imgSmall = (u, w = 640) => u ? u.replace(/\/\d+px-/, `/${w}px-`) : u;
+const credits = (list, l) => list.length ? `<p class="muted" style="font-size:11.5px">${UI[l].photo}: ${list.map(([nm, I]) => `${esc(nm)} – <a href="${esc(I.d)}" rel="noopener" target="_blank">${esc(I.a)}</a>, ${esc(I.l)}`).join(" · ")} (Wikimedia Commons)</p>` : "";
+const bannerHtml = (I, alt, l) => I ? `<figure class="banner"><img src="${esc(I.u)}" alt="${esc(alt)}" width="${I.w || 1600}" height="${I.h || 400}" fetchpriority="high"><figcaption>${UI[l].photo}: <a href="${esc(I.d)}" rel="noopener" target="_blank">${esc(I.a)}</a>, ${esc(I.l)}</figcaption></figure>` : "";
 // ---------- kohdesivut: saaret ja rannikot (rahasivut: suunnittelija päättää kohteen ja varaa) ----------
 const inBox = (r, la, lo) => r.bb && la >= r.bb[0] && la <= r.bb[2] && lo >= r.bb[1] && lo <= r.bb[3];
 const regT = (R, r) => r.sst ? r.sst[dIdx(R.d)] : null;
@@ -486,13 +495,13 @@ function warmRange(l, cl) {
 }
 async function destPage(env, url, l, sl) {
   const s = STR[l], A = ART[l], D = DS[l], U = UI[l], o = url.origin, path = `/destination/${sl}/`;
-  const [R, C] = await Promise.all([asset(env, o, "/data/regions.json"), countries(env, o)]);
+  const [R, C, IM] = await Promise.all([asset(env, o, "/data/regions.json"), countries(env, o), asset(env, o, "/data/dest_images.json").catch(() => ({}))]);
   const r = R.r.find(x => x.s === sl); if (!r) return notFound(l);
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
   const n = r.nm[l] || r.nm.en, di = dIdx(R.d), t0 = regT(R, r), today = todayIso(), cb = cnameBare(r.cc, l), csl = cslugOf(C, r.cc);
   const crumbs = [[s.home, P(l) + "/"], [D.allH, `${P(l)}/destination/`], [n, P(l) + path]];
   const cl = r.cl ? r.cl[0] : null, mx = cl ? Math.max(...cl) : null, iw = cl ? cl.indexOf(mx) : 0;
-  let h = crumbHtml(crumbs) + `<h1>${esc(D.dTitle(n))}</h1><p class="fresh"><span><b>${U.upd} ${esc(updTxt(R.f, l))}</b> · <a href="${P(l)}/beaches/${csl}/">${esc(cb)}</a></span></p>`;
+  let h = crumbHtml(crumbs) + bannerHtml(IM[sl], n, l) + `<h1>${esc(D.dTitle(n))}</h1><p class="fresh"><span><b>${U.upd} ${esc(updTxt(R.f, l))}</b> · <a href="${P(l)}/beaches/${csl}/">${esc(cb)}</a></span></p>`;
   const w0 = r.wx.find(x => x[0] >= today);
   const chips = `<div class="chips">${w0 ? `<span>${s.wAir} ${nf(w0[1], 0, l)} °C</span><span>${cap(s.wind)} ${w0[2]} m/s</span>` : ""}<span>${qi("E", "#fff")}${r.e5} / ${r.n}</span></div>`;
   h += t0 != null ? `<section class="hero"><div class="row"><div class="big">${nf(t0, 0, l)}°${l === "en" ? `<small>${F(t0)} °F</small>` : ""}</div><div class="vt"><span>${s.waterToday}</span><b>${cap(s.verdict[vIdx(t0)])}</b></div></div>${chips}<p>${esc(D.dLead(n, r.n, r.e5))}</p></section>`
@@ -525,10 +534,10 @@ async function destPage(env, url, l, sl) {
 async function destIndex(env, url, l) {
   const s = STR[l], D = DS[l], o = url.origin, path = "/destination/";
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
-  const R = await asset(env, o, "/data/regions.json");
+  const [R, IM] = await Promise.all([asset(env, o, "/data/regions.json"), asset(env, o, "/data/dest_images.json").catch(() => ({}))]);
   const rows = R.r.slice().sort((a, b) => (regT(R, b) ?? -99) - (regT(R, a) ?? -99));
   const crumbs = [[s.home, P(l) + "/"], [D.allH, P(l) + path]];
-  let h = crumbHtml(crumbs) + `<h1>${esc(D.allTitle)}</h1><p class="lead">${esc(D.allLead(rows.length))}</p><ul class="near">${rows.map(x => { const t = regT(R, x); return `<li><a href="${P(l)}/destination/${x.s}/"><span>${esc(x.nm[l] || x.nm.en)}<span class="muted"> · ${esc(cnameBare(x.cc, l))}</span></span><span>${t != null ? `<span class="dot" style="background:${tempColor(t)}"></span>${nf(t, 1, l)} °C` : ""}</span></a></li>`; }).join("")}</ul>`;
+  let h = crumbHtml(crumbs) + `<h1>${esc(D.allTitle)}</h1><p class="lead">${esc(D.allLead(rows.length))}</p><div class="dgrid">${rows.map(x => { const t = regT(R, x), I = IM[x.s]; return `<a href="${P(l)}/destination/${x.s}/">${I ? `<img src="${esc(imgSmall(I.u, 500))}" alt="" loading="lazy" width="500" height="104">` : `<i class="ph"></i>`}<span>${esc(x.nm[l] || x.nm.en)}<em style="font-style:normal;white-space:nowrap">${t != null ? `${nf(t, 0, l)}°` : ""}</em></span><small>${esc(cnameBare(x.cc, l))}</small></a>`; }).join("")}</div>${credits(rows.filter(x => IM[x.s]).map(x => [x.nm[l] || x.nm.en, IM[x.s]]), l)}`;
   return page(l, { title: D.allTitle + " | " + SITE, desc: D.allLead(rows.length), path, head: crumbLd(crumbs), body: h });
 }
 
