@@ -32,10 +32,11 @@ def page_images(api):
         if f and not BAD.search(f): res[sl] = "File:" + f
     return res
 # hakusanat Commonsin laatukuvahakuun (ranta- ja rannikkokuvat)
-QUERY = {"lisbon-coast": "Cascais beach", "costa-del-sol": "Marbella beach", "costa-blanca": "Benidorm beach", "costa-brava": "Costa Brava beach",
-         "larnaca-ayia-napa": "Ayia Napa beach", "limassol-paphos": "Paphos coast", "athens-riviera": "Vouliagmeni", "amalfi-naples": "Amalfi coast",
+QUERY = {"tenerife": "Playa de las Teresitas", "lanzarote": "Playa Papagayo Lanzarote", "ibiza": "Cala Comte Ibiza", "menorca": "Cala Macarella",
+         "reunion": "Saint-Gilles-les-Bains plage", "lisbon-coast": "Cascais beach", "costa-del-sol": "Marbella beach", "costa-blanca": "Benidorm beach", "costa-brava": "Costa Brava beach",
+         "larnaca-ayia-napa": "Ayia Napa beach", "limassol-paphos": "Coral Bay Cyprus", "athens-riviera": "Vouliagmeni beach", "amalfi-naples": "Amalfi coast",
          "cote-d-azur": "Nice Promenade des Anglais beach", "split-dalmatia": "Split Croatia beach", "istria": "Rovinj", "albanian-riviera": "Ksamil beach",
-         "bulgarian-black-sea": "Sunny Beach Bulgaria", "halkidiki": "Halkidiki beach"}
+         "bulgarian-black-sea": "Sozopol beach", "halkidiki": "Halkidiki beach"}
 def commons_search(q):
     r = get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "list": "search", "srnamespace": 6, "srlimit": 8,
             "format": "json", "formatversion": 2, "srsearch": f'{q} filetype:bitmap incategory:"Quality_images"'}))
