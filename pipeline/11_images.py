@@ -1,4 +1,4 @@
-"""Kohdesivujen bannerikuvat: Wikivoyagen sivubanneri (kuratoitu maisemakuva) → Wikimedia Commonsin lisenssi- ja tekijätiedot.
+"""Kohdesivujen kuvat: Wikivoyage-artikkelin vapaa pääkuva (page_image_free) → Wikimedia Commonsin lisenssi- ja tekijätiedot.
 Kuvat näytetään suoraan upload.wikimedia.orgista tekijän ja lisenssin kanssa. Epäonnistuessa käytetään edellistä tiedostoa
 tai ei kuvaa (sivu toimii ilmankin). Tulos: site/data/dest_images.json {slug: {u, w, a, l, d}}."""
 import json, os, re, sys, time, urllib.parse, urllib.request
@@ -21,10 +21,10 @@ def get(url):
     raise RuntimeError("haku epäonnistui")
 old = json.load(open(OUT)) if os.path.exists(OUT) else {}
 try:
-    q = get("https://en.wikivoyage.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "prop": "pageprops", "ppprop": "wpb_banner",
+    q = get("https://en.wikivoyage.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "prop": "pageprops", "ppprop": "page_image_free",
             "redirects": 1, "format": "json", "formatversion": 2, "titles": "|".join(TITLES.values())}))["query"]
     alias = {x["from"]: x["to"] for x in q.get("normalized", []) + q.get("redirects", [])}
-    banner = {p["title"]: p.get("pageprops", {}).get("wpb_banner") for p in q["pages"]}
+    banner = {p["title"]: p.get("pageprops", {}).get("page_image_free") for p in q["pages"]}
     files = {}
     for sl, t in TITLES.items():
         t2 = alias.get(alias.get(t, t), alias.get(t, t))
@@ -46,7 +46,7 @@ try:
                    "a": strip(m.get("Artist", {}).get("value"))[:80] or "Wikimedia Commons", "l": lic, "d": i.get("descriptionurl")}
     if len(out) < len(old) * 0.7: raise RuntimeError(f"vain {len(out)} kuvaa, pidetään edellinen")
     json.dump(out, open(OUT, "w"), ensure_ascii=False, separators=(",", ":"))
-    print(len(out), "/", len(TITLES), "bannerikuvaa")
+    print(len(out), "/", len(TITLES), "kohdekuvaa")
 except Exception as e:
     print("kuvat: käytetään edellistä tiedostoa:", e)
     if not os.path.exists(OUT): json.dump({}, open(OUT, "w"))
