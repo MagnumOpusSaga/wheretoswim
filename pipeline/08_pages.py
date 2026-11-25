@@ -13,7 +13,7 @@ TODAY = dt.date.today().isoformat()
 D0 = T["sst_dates"].index(TODAY) if TODAY in T["sst_dates"] else 0
 # Affiliate-tunnukset lisätään tähän, kun kumppaniohjelmat on hyväksytty (esim. Travelpayouts / Booking.com)
 # Kumppanilinkit (Travelpayouts). {iata} = kohdekenttä. None = tavallinen linkki ilman kumppanimerkintää.
-AFF = {"flights": "https://tp.media/r?campaign_id=100&marker=810624&p=4114&sub_id=warmsea&trs=605657&u=https%3A%2F%2Fwww.aviasales.com%2F%3Fdestination%3D{iata}", "hotels": None}
+AFF = {"flights": "https://tp.media/r?campaign_id=100&marker=810624&p=4114&sub_id=warm&trs=605657&u=https%3A%2F%2Fwww.aviasales.com%2F%3Fdestination%3D{iata}", "hotels": None}
 AFFL = {"fi": "Kumppanilinkki (mainos)", "en": "Affiliate link (ad)"}
 def aff_tag(kind, lang, short=False):
     if not AFF.get(kind): return ""

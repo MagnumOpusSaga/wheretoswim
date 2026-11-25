@@ -1,4 +1,4 @@
-// Kumppanilinkit (Travelpayouts, marker 810624, projekti 605657, SubID beachbox). Tyhjä arvo = linkkiä ei näytetä.
+// Kumppanilinkit (Travelpayouts, marker 810624, projekti 605657). SubID vaihdetaan sivutyypin mukaan (main.js: sub()): beach, month, destination, flightdelay; staattiset sivut warm. Tyhjä arvo = linkkiä ei näytetä.
 // claim:     lentokorvauspalvelun linkki; claimName näkyy teksteissä. AirHelpin hyväksynnän jälkeen vaihda molemmat.
 // flights:   lentohaku, {IATA} korvataan kohdekentän koodilla (Aviasales: ?destination=ALC esitäyttää kohteen).
 // car:       autonvuokraus.

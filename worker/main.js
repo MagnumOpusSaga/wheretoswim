@@ -378,19 +378,22 @@ document.getElementById("cp").onclick=async()=>{ if(!sel) return; try{ await nav
 
 
 // ---------- "Matka tänne": lentoasema + merkityt kumppanilinkit ----------
+// Oma SubID jokaiselle sivutyypille, jotta Travelpayoutsin raportista näkee, mikä sivutyyppi tuo tuloja:
+// beach (rantasivu), month (kuukausisivu), destination (kohdesivu), flightdelay (lento-opas); staattiset Lämmin meri -sivut: warm.
+const sub = (u, id) => u.replace(/sub_id=[^&]*/, "sub_id=" + id);
 const affB = (href, text, l) => `<a class="ab" href="${esc(href)}" rel="sponsored nofollow noopener" target="_blank"><span>${text}</span><small class="aff">${BOX[l].aff}</small></a>`;
 function trip(l, b, g) {
   if (!b.ap || !b.ap.length || !g.a) return "";
   const x = BOX[l], U = UI[l], [c0, km0] = b.ap[0], a0 = g.a[c0] || [c0, ""], city = a0[1] || a0[0];
   let h = `<p>✈️ ${esc(x.ap(city, c0, km0))}</p>`;
   if (b.ap[1]) { const [c1, km1] = b.ap[1], a1 = g.a[c1] || [c1, ""]; h += `<p>✈️ ${esc(x.big(a1[1] || a1[0], c1, km1))}</p>`; }
-  h += AFF.flights ? affB(AFF.flights.replace("{IATA}", c0), U.flBtn, l)
+  h += AFF.flights ? affB(sub(AFF.flights, "beach").replace("{IATA}", c0), U.flBtn, l)
     : `<a class="ab" href="https://www.google.com/travel/flights?q=${encodeURIComponent("Flights to " + c0)}" rel="nofollow noopener" target="_blank"><span>${U.flBtn}</span></a>`;
-  if (AFF.car) h += affB(AFF.car, U.carBtn, l);
+  if (AFF.car) h += affB(sub(AFF.car, "beach"), U.carBtn, l);
   // lentokorvaus: kysymys + tieto tekstinä, tarkistus kumppanilinkkinä ja opas samassa kohdassa
   const dl = x.delay.replaceAll("AirHelp", AFF.claimName || "AirHelp"), cut = dl.lastIndexOf(". ");
   const dTxt = cut > 0 ? dl.slice(0, cut + 1) : dl, dAct = cut > 0 ? dl.slice(cut + 2) : "";
-  h += `<div style="border-top:1px solid var(--line);margin:14px 0 0;padding:12px 0 0"><p style="margin:0">${esc(dTxt)} <a href="${P(l)}/flight-delay/">${U.rights} →</a></p>${AFF.claim && dAct ? affB(AFF.claim, esc(dAct), l) : ""}</div>`;
+  h += `<div style="border-top:1px solid var(--line);margin:14px 0 0;padding:12px 0 0"><p style="margin:0">${esc(dTxt)} <a href="${P(l)}/flight-delay/">${U.rights} →</a></p>${AFF.claim && dAct ? affB(sub(AFF.claim, "beach"), esc(dAct), l) : ""}</div>`;
   return `<section class="trip"><div class="hd"><h2>${U.tripH}</h2></div>${h}</section>`;
 }
 
@@ -399,7 +402,7 @@ function guidePage(url, l) {
   const G = GUIDE[l], path = "/flight-delay/";
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
   const N = AFF.claimName;
-  const ah = AFF.claim ? `<h2>${N}</h2><p>${GUIDE_AH[l].replaceAll("AirHelp", N)}</p><p>${affA(AFF.claim, GUIDE_AH_BTN[l].replaceAll("AirHelp", N), l, "btn p")}</p>` : "";
+  const ah = AFF.claim ? `<h2>${N}</h2><p>${GUIDE_AH[l].replaceAll("AirHelp", N)}</p><p>${affA(sub(AFF.claim, "flightdelay"), GUIDE_AH_BTN[l].replaceAll("AirHelp", N), l, "btn p")}</p>` : "";
   const body = crumbHtml([[STR[l].home, P(l) + "/"], [G.h1, P(l) + path]]) + `<h1>${G.h1}</h1>` + G.html.replace("{AH}", ah)
     + `<p><a href="${P(l)}/beaches/">${STR[l].allCountries} →</a></p>`;
   const head = ld({ "@context": "https://schema.org", "@type": "Article", headline: G.h1, description: G.desc, inLanguage: l, url: HOST + P(l) + path,
@@ -456,7 +459,7 @@ async function monthPage(env, url, l, mi) {
   h += `<nav class="mchips">${order.map(i => `<a href="${P(l)}/sea-temperature/${MONTHS[i]}/"${i === mi ? ` class="on" aria-current="page"` : ""}>${esc(capF(mName(l, i, "short")))}</a>`).join("")}</nav>`;
   h += `<h2 style="margin:0">${A.rankH}</h2><p class="muted" style="margin:2px 0 8px;font-size:12.5px">${capF(A.avgL)} (${A.rangeT}). ${A.rankNote}</p>`;
   h += `<div class="rk">${rows.map((r, k) => { const v = r[6][mi];
-    const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(AFF.flights.replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
+    const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(sub(AFF.flights, "month").replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
     return `<div class="it${k === 0 ? " top" : ""}"><a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(sub(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
   h += scaleHtml(l) + `<div style="height:16px"></div>`;
   h += `<a class="todayb" href="${P(l)}/"><span><b>${A.todayH}</b><span>${A.todayS}</span></span><em>${A.mapL}</em></a>`;
@@ -499,10 +502,10 @@ async function destPage(env, url, l, sl) {
   if (cl) { const wr = warmRange(l, cl); h += climHtml(l, cl).replace("</p></section>", ` <b>${D.warm20}:</b> ${wr ? esc(wr) : esc(D.noWarm)}</p></section>`); }
   const ap = r.ap.map(([c, city]) => `${esc(city)} (${c})`).join(", ");
   let tr = `<p>✈️ ${esc(D.apLine(ap))}</p>`;
-  tr += AFF.flights ? affB(AFF.flights.replace("{IATA}", r.iata), U.flBtn, l) : "";
-  tr += AFF.hotels ? affB(AFF.hotels.replace("{CITY}", encodeURIComponent(r.nm.en)), esc(D.hotels(n)), l)
+  tr += AFF.flights ? affB(sub(AFF.flights, "destination").replace("{IATA}", r.iata), U.flBtn, l) : "";
+  tr += AFF.hotels ? affB(sub(AFF.hotels, "destination").replace("{CITY}", encodeURIComponent(r.nm.en)), esc(D.hotels(n)), l)
     : `<a class="ab" href="https://www.booking.com/searchresults.html?ss=${encodeURIComponent(r.nm.en.split(" (")[0])}" rel="nofollow noopener" target="_blank"><span>${esc(D.hotels(n))}</span></a>`;
-  if (AFF.car) tr += affB(AFF.car, U.carBtn, l);
+  if (AFF.car) tr += affB(sub(AFF.car, "destination"), U.carBtn, l);
   tr += `<a class="ln" href="${P(l)}/flight-delay/">${BOX[l].guide}</a>`;
   h += `<section class="trip"><div class="hd"><h2>${U.tripH}</h2></div>${tr}</section>`;
   if (r.sst) { const ss = r.sst.slice(di), mn = Math.min(...ss), mx2 = Math.max(...ss);
