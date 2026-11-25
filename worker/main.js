@@ -464,7 +464,7 @@ async function monthPage(env, url, l, mi) {
   h += `<div class="rk">${rows.map((r, k) => { const v = r[6][mi];
     const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(sub(AFF.flights, "month").replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
     const I = k < 3 && IM[r[1]];
-    return `<div class="it${k === 0 ? " top" : ""}">${I ? `<img class="img" src="${esc(imgSmall(I.u, 800))}" alt="${esc(lab(r))}" loading="${k ? "lazy" : "eager"}" width="800" height="120">` : ""}<a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(subT(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
+    return `<div class="it${k === 0 ? " top" : ""}">${I ? `<img class="img" src="${esc(imgSmall(I.u, 960))}" alt="${esc(lab(r))}" loading="${k ? "lazy" : "eager"}" width="960" height="120">` : ""}<a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(subT(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
   h += scaleHtml(l) + `<div style="height:16px"></div>`;
   h += `<a class="todayb" href="${P(l)}/"><span><b>${A.todayH}</b><span>${A.todayS}</span></span><em>${A.mapL}</em></a>`;
   h += `<section class="meth" id="method"><b>${A.how}</b><p>${A.method(mi_)}</p><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section>`;
@@ -478,9 +478,9 @@ async function monthPage(env, url, l, mi) {
 
 
 // kohteen bannerikuva (Wikivoyage/Commons, tekijä ja lisenssi näkyvissä); pienempi versio listoihin
-const imgSmall = (u, w = 640) => u ? u.replace(/\/\d+px-/, `/${w}px-`) : u;
+const imgSmall = (u, w = 500) => u ? u.replace(/\/\d+px-/, `/${w}px-`) : u;
 const credits = (list, l) => list.length ? `<p class="muted" style="font-size:11.5px">${UI[l].photo}: ${list.map(([nm, I]) => `${esc(nm)} – <a href="${esc(I.d)}" rel="noopener" target="_blank">${esc(I.a)}</a>, ${esc(I.l)}`).join(" · ")} (Wikimedia Commons)</p>` : "";
-const bannerHtml = (I, alt, l) => I ? `<figure class="banner"><img src="${esc(I.u)}" alt="${esc(alt)}" width="${I.w || 1600}" height="${I.h || 400}" fetchpriority="high"><figcaption>${UI[l].photo}: <a href="${esc(I.d)}" rel="noopener" target="_blank">${esc(I.a)}</a>, ${esc(I.l)}</figcaption></figure>` : "";
+const bannerHtml = (I, alt, l) => I ? `<figure class="banner"><img src="${esc(imgSmall(I.u, 1280))}" alt="${esc(alt)}" width="${I.w || 1600}" height="${I.h || 400}" fetchpriority="high"><figcaption>${UI[l].photo}: <a href="${esc(I.d)}" rel="noopener" target="_blank">${esc(I.a)}</a>, ${esc(I.l)}</figcaption></figure>` : "";
 // ---------- kohdesivut: saaret ja rannikot (rahasivut: suunnittelija päättää kohteen ja varaa) ----------
 const inBox = (r, la, lo) => r.bb && la >= r.bb[0] && la <= r.bb[2] && lo >= r.bb[1] && lo <= r.bb[3];
 const regT = (R, r) => r.sst ? r.sst[dIdx(R.d)] : null;
