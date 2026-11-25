@@ -1,4 +1,4 @@
-"""Kohdesivujen kuvat: Wikivoyage-artikkelin vapaa pääkuva (page_image_free) → Wikimedia Commonsin lisenssi- ja tekijätiedot.
+"""Kohdesivujen kuvat: Wikimedia Commonsin laatukuvat ("Quality images") haulla "<kohde> beach", varalla Wikivoyagen/Wikipedian pääkuva → Wikimedia Commonsin lisenssi- ja tekijätiedot.
 Kuvat näytetään suoraan upload.wikimedia.orgista tekijän ja lisenssin kanssa. Epäonnistuessa käytetään edellistä tiedostoa
 tai ei kuvaa (sivu toimii ilmankin). Tulos: site/data/dest_images.json {slug: {u, w, a, l, d}}."""
 import json, os, re, sys, time, urllib.parse, urllib.request
@@ -31,17 +31,38 @@ def page_images(api):
         t2 = alias.get(alias.get(t, t), alias.get(t, t)); f = img.get(t2)
         if f and not BAD.search(f): res[sl] = "File:" + f
     return res
+# hakusanat Commonsin laatukuvahakuun (ranta- ja rannikkokuvat)
+QUERY = {"lisbon-coast": "Cascais beach", "costa-del-sol": "Marbella beach", "costa-blanca": "Benidorm beach", "costa-brava": "Costa Brava beach",
+         "larnaca-ayia-napa": "Ayia Napa beach", "limassol-paphos": "Paphos coast", "athens-riviera": "Vouliagmeni", "amalfi-naples": "Amalfi coast",
+         "cote-d-azur": "Nice Promenade des Anglais beach", "split-dalmatia": "Split Croatia beach", "istria": "Rovinj", "albanian-riviera": "Ksamil beach",
+         "bulgarian-black-sea": "Sunny Beach Bulgaria", "halkidiki": "Halkidiki beach"}
+def commons_search(q):
+    r = get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "list": "search", "srnamespace": 6, "srlimit": 8,
+            "format": "json", "formatversion": 2, "srsearch": f'{q} filetype:bitmap incategory:"Quality_images"'}))
+    return [x["title"] for x in r.get("query", {}).get("search", []) if re.search(r"\.jpe?g$", x["title"], re.I) and not BAD.search(x["title"])]
 try:
     # 1) Wikivoyagen artikkelin kuva, 2) puuttuvat/kartat: Wikipedian artikkelin kuva (vain valokuvat, ei karttoja)
-    files = page_images("https://en.wikivoyage.org/w/api.php")
-    try:
-        wp = page_images("https://en.wikipedia.org/w/api.php")
-        for sl, f in wp.items(): files.setdefault(sl, f)
-    except Exception as e: print("wikipedia:", e)
-    ii = get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "prop": "imageinfo", "iiprop": "url|extmetadata|size",
-             "iiurlwidth": 1600, "format": "json", "formatversion": 2, "titles": "|".join(sorted(set(files.values())))}))["query"]
-    norm = {x["from"]: x["to"] for x in ii.get("normalized", [])}
-    info = {p["title"]: p["imageinfo"][0] for p in ii["pages"] if p.get("imageinfo")}
+    cand = {}
+    for sl, t in TITLES.items():
+        try: cand[sl] = commons_search(QUERY.get(sl, t + " beach"))[:5]
+        except Exception as e: print("haku", sl, e); cand[sl] = []
+        time.sleep(1)
+    try: vo = page_images("https://en.wikivoyage.org/w/api.php")
+    except Exception as e: print("wikivoyage:", e); vo = {}
+    for sl, f in vo.items(): cand.setdefault(sl, []).append(f)
+    allf = sorted({f for v in cand.values() for f in v})
+    info, norm = {}, {}
+    for k in range(0, len(allf), 50):
+        ii = get("https://commons.wikimedia.org/w/api.php?" + urllib.parse.urlencode({"action": "query", "prop": "imageinfo", "iiprop": "url|extmetadata|size",
+                 "iiurlwidth": 1600, "format": "json", "formatversion": 2, "titles": "|".join(allf[k:k + 50])}))["query"]
+        norm.update({x["from"]: x["to"] for x in ii.get("normalized", [])})
+        info.update({p["title"]: p["imageinfo"][0] for p in ii["pages"] if p.get("imageinfo")})
+        time.sleep(1)
+    files = {}
+    for sl, lst in cand.items():
+        for f in lst:
+            i = info.get(norm.get(f, f))
+            if i and i.get("width", 0) >= 1.3 * i.get("height", 1) and i.get("width", 0) >= 1200: files[sl] = f; break
     strip = lambda h: re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", h or "")).strip()
     out = {}
     for sl, f in files.items():

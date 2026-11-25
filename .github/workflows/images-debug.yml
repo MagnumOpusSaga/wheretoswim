@@ -1,0 +1,10 @@
+name: Images debug
+on: workflow_dispatch
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: |
+          mkdir -p site/data && python pipeline/11_images.py
+          python -c "import json,re;d=json.load(open('site/data/dest_images.json'));[print(k,'|',re.sub(r'.*File:','',v['d'])[:80]) for k,v in d.items()]"
