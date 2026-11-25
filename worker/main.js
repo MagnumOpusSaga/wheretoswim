@@ -449,7 +449,7 @@ async function monthPage(env, url, l, mi) {
   const R = await asset(env, o, "/data/regions.json");
   // kohteet (saaret ja rannikot) kuukauden 10 v keskiarvon mukaan; merentakaiset alueet eivät ole "Euroopan" vertailussa
   const rows = R.r.filter(r => !r.ov && r.cl).map(r => [r.cc, r.s, r.nm[l] || r.nm.en, "", r.s, r.iata, r.cl[0], r.cl[1], r.cl[2]]).sort((a, b) => b[6][mi] - a[6][mi]).slice(0, 10);
-  const lab = r => r[2], sub = r => cnameBare(r[0], l), tC = v => `${nf(v, 1, l)} °C`;
+  const lab = r => r[2], subT = r => cnameBare(r[0], l), tC = v => `${nf(v, 1, l)} °C`;
   const mi_ = mIn(l, mi), mN = capF(mName(l, mi)), cur = new Date().getUTCMonth();
   const crumbs = [[s.home, P(l) + "/"], [A.crumb, `${P(l)}/sea-temperature/${MONTHS[cur]}/`], [mN, P(l) + path]];
   const town = r => `${P(l)}/destination/${r[1]}/`;
@@ -460,7 +460,7 @@ async function monthPage(env, url, l, mi) {
   h += `<h2 style="margin:0">${A.rankH}</h2><p class="muted" style="margin:2px 0 8px;font-size:12.5px">${capF(A.avgL)} (${A.rangeT}). ${A.rankNote}</p>`;
   h += `<div class="rk">${rows.map((r, k) => { const v = r[6][mi];
     const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(sub(AFF.flights, "month").replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
-    return `<div class="it${k === 0 ? " top" : ""}"><a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(sub(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
+    return `<div class="it${k === 0 ? " top" : ""}"><a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(subT(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
   h += scaleHtml(l) + `<div style="height:16px"></div>`;
   h += `<a class="todayb" href="${P(l)}/"><span><b>${A.todayH}</b><span>${A.todayS}</span></span><em>${A.mapL}</em></a>`;
   h += `<section class="meth" id="method"><b>${A.how}</b><p>${A.method(mi_)}</p><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section>`;
