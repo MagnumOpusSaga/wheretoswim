@@ -132,9 +132,10 @@ small.aff{font-size:11px;font-weight:500;color:var(--muted);background:var(--chi
 .rk .img{display:block;width:calc(100% + 28px);margin:-10px -14px 0;height:120px;object-fit:cover}
 footer{max-width:820px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}footer a{color:var(--muted)}footer .langs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px}`;
 
-function page(l, { title: ttl, desc, path, alt = true, head = "", body, status = 200, noindex = false }) {
+// hl = kielet, jotka ovat indeksissä (hreflang vain niihin); noindex-sivulla ei hreflangia eikä canonicalia
+function page(l, { title: ttl, desc, path, alt = true, hl = LANGS, head = "", body, status = 200, noindex = false }) {
   const s = STR[l], url = HOST + P(l) + path;
-  const alts = alt ? LANGS.map(x => `<link rel="alternate" hreflang="${x}" href="${HOST}${P(x)}${path}">`).join("") + `<link rel="alternate" hreflang="x-default" href="${HOST}${path}">` : "";
+  const alts = alt && !noindex ? hl.map(x => `<link rel="alternate" hreflang="${x}" href="${HOST}${P(x)}${path}">`).join("") + (hl.includes("en") ? `<link rel="alternate" hreflang="x-default" href="${HOST}${path}">` : "") : "";
   const langs = alt ? `<div class="langs">${LANGS.map(x => x === l ? `<b>${STR[x].native}</b>` : `<a href="${P(x)}${path}" hreflang="${x}">${STR[x].native}</a>`).join("")}</div>` : "";
   return new Response(`<!DOCTYPE html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(ttl)}</title>${desc ? `<meta name="description" content="${esc(desc)}">` : ""}${noindex ? `<meta name="robots" content="noindex">` : `<link rel="canonical" href="${url}">`}${alts}
@@ -228,13 +229,14 @@ async function beach(env, url, l, id) {
       h += `<section style="margin:0 0 18px"><h2 style="margin-bottom:2px">${U.warmH}</h2><p class="muted" style="margin:0 0 8px">${U.warmSub}</p><div class="cmp">${rows.map(r => `<a href="${r.href}"${r.me ? ` class="me"` : ""}><span class="nm"><b>${esc(r.nm)}</b><span>${esc(r.where)}</span></span><span class="tr"><i style="width:${tw(r.t)}%;background:${tempColor(r.t)}"></i></span><span class="v">${nf(r.t, 1, l)}°</span></a>`).join("")}</div></section>`;
     }
   }
-  h += trip(l, b, g);
+  const ok = beachOk(b), hl = langsFor(b.c);
+  if (ok) h += trip(l, b, g);   // kumppanilohko vain sivulle, jolla on omaa dataa
   h += `<section class="panel"><h2>${s.histH}</h2><div class="hist">${[2025, 2024, 2023, 2022, 2021].map((y, k) => `<span>${qi(b.h[k])}${y}${COL(l)} ${s.q[b.h[k]] || s.q["-"]}</span>`).join("")}</div><p class="muted" style="margin:10px 0 0">${s.histNote}</p></section>`;
   if (b.smp) h += `<h2>${s.smpH}</h2><table><tr><td>${s.dateH}</td><td>${dayFmt(b.smp[0], l)} ${b.smp[0].slice(0, 4)}</td></tr><tr><td>${s.ecoli}</td><td>${esc(b.smp[1] ?? "–")} /100 ml</td></tr><tr><td>${s.entero}</td><td>${esc(b.smp[2] ?? "–")} /100 ml</td></tr></table><p class="muted">${s.smpSrc}</p>`;
   if (b.ev) h += `<h2>${s.evH}</h2><ul>${Object.entries(b.ev).map(([k, n]) => `<li>${esc(l === "fr" ? k : (EV[l] && EV[l][k]) || EV_EN[k] || k)}${n > 1 ? ` (${n}×)` : ""}</li>`).join("")}</ul>`;
   h += `<p><a href="${P(l)}/embed/?b=${encodeURIComponent(m.id)}">&lt;/&gt; ${s.embedLink}</a></p>`;
   h += `<div class="disc">${s.disc(esc(longDate(g.f, l)))}</div>` + shareJs(l);
-  return page(l, { title: s.beachTitle(name, town), desc, path, head, body: h });
+  return page(l, { title: s.beachTitle(name, town), desc, path, head, body: h, hl, noindex: !ok || !hl.includes(l) });
 }
 
 // ---------- kaupunkisivu ----------
@@ -274,7 +276,8 @@ async function town(env, url, l, csl, tsl) {
   if (near.length) h += `<h2>${s.nearTownsH}</h2><ul class="near">${near.map(([x, d]) => { const v = townTemp(x, di); return `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/"><span>${esc(x[1])}<span class="muted"> · ${nf(d, 0, l)} km · ${s.beachesN(x[4].length)}</span></span><span>${v != null ? `<span class="dot" style="background:${tempColor(v)}"></span>${nf(v, 0, l)} °C` : ""}</span></a></li>`; }).join("")}</ul>`;
   h += `<p><a href="${P(l)}/beaches/${csl}/">${esc(s.allIn(cn))} →</a></p><div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>` + shareJs(l);
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "ItemList", name: s.townH1(t[1]), itemListElement: rows.slice(0, 50).map((r, i) => ({ "@type": "ListItem", position: i + 1, url: HOST + beachPath(l, r.id, r.raw, t[1]), name: r.name })) });
-  return page(l, { title: s.townTitle(t[1], n), desc, path, head, body: h });
+  const tok = rows.length >= 3 && rows.some(r => beachOk(r.b)), thl = langsFor(cc);
+  return page(l, { title: s.townTitle(t[1], n), desc, path, head, body: h, hl: thl, noindex: !tok || !thl.includes(l) });
 }
 
 // ---------- maasivu ----------
@@ -570,6 +573,11 @@ async function reportPage(env, url, l) {
 }
 
 // ---------- reititys ----------
+// ---------- indeksointiportti (spämmisuoja 25.11.2026, sama kuin pipeline/07_beach_shards.py) ----------
+// rantasivu: EU-laatuluokka + oma lämpötila; kielet en + rannan oma kieli. Kaupunki: ≥3 rantaa, joista ≥1 läpäisee.
+const LOCAL = { FI: ["fi"], DE: ["de"], AT: ["de"], LU: ["fr", "de"], FR: ["fr"], ES: ["es"], IT: ["it"], NL: ["nl"], BE: ["nl", "fr"], CH: ["de", "fr", "it"] };
+const langsFor = cc => ["en", ...(LOCAL[cc] || [])];
+const beachOk = b => !!b && "EGSP".includes((b.h || "-")[0]) && !!(b.sst || b.lake);
 const DYN = /^\/(beach|beaches|embed|flight-delay|privacy|sea-temperature|reports|destination|kohde)(\/|$)/;
 export default {
   async fetch(request, env, ctx) {

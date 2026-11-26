@@ -31,6 +31,7 @@ for b in beaches:
             k = np.unravel_index(np.where(m, d, np.inf).argmin(), d.shape); y, x = ii[k], jj[k]
             out[b["bathingWaterIdentifier"]] = [[round(float(v), 1) for v in a[:, y, x]] for a in (mean, mn, mx)]
             break
-json.dump({"source": "Copernicus Marine GLOBAL_MULTIYEAR_PHY_001_030 (cmems_mod_glo_phy_my_0.083deg_P1M-m)", "years": [Y0, Y1], "sites": out},
+import datetime as _dt
+json.dump({"computed": _dt.date.today().isoformat(), "source": "Copernicus Marine GLOBAL_MULTIYEAR_PHY_001_030 (cmems_mod_glo_phy_my_0.083deg_P1M-m)", "years": [Y0, Y1], "sites": out},
           open("data/climate.json", "w"), separators=(",", ":"))
 print("climate", len(out), "/", len(beaches), "rantaa")

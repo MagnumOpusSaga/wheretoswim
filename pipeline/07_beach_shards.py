@@ -176,35 +176,60 @@ print(len(regs), "lomakohdetta")
 DEST_SLUGS = [r["s"] for r in regs]
 
 
-# --- sitemap-indeksi ---
+# --- indeksointiportti (spämmisuoja, Branu 25.11.2026; claude/kirjasto/10-spamsuoja.md) ---
+# Sivukarttaan vain sivut, joilla on omaa dataa. Sama portti on workerissa (noindex + hreflang vain sallituille kielille).
+#  rantasivu:   EU-laatuluokka (E/G/S/P) JA oma lämpötila (meren mallilämpö tai järven mittaus); kielet: en + rannan oma kieli
+#  kaupunki:    vähintään 3 rantaa, joista ainakin yksi läpäisee rantaportin; kielet: en + oma kieli
+#  maat, kohteet, kuukaudet, raportti, opas, etusivut: kaikki 7 kieltä (vähän sivuja, matkailijoilla kielikohtaista kysyntää)
+# lastmod vain kun data muuttuu: meriranta = päivän lämpö, järvi = mittauspäivä, kuukausi/raportti = laskentapäivä.
+LOCAL = {"FI": ["fi"], "DE": ["de"], "AT": ["de"], "LU": ["fr", "de"], "FR": ["fr"], "ES": ["es"], "IT": ["it"], "NL": ["nl"], "BE": ["nl", "fr"], "CH": ["de", "fr", "it"]}
+CLIM_DATE = json.load(open("data/climate.json")).get("computed", "2026-11-24") if os.path.exists("data/climate.json") else None
+REPORT_DATE = "2026-11-24"   # EEA:n kausi 2025; vaihda kun kauden 2026 luokat päivitetään
+def beach_ok(i): return S[i][6][0] in "EGSP" and (bool(T["sst"][i]) or bool(T["lake"][i]))
+def beach_mod(i): return today if T["sst"][i] else T["lake"][i][0][-1][0]
+def langs_for(cc): return [""] + LOCAL.get(cc, [])
+idx_of = {s_[0]: i for i, s_ in enumerate(S)}
 B = "https://wheretoswimtoday.com"
-urls = [f"{B}/"]
+urls = [(f"{B}/", today)]
 if os.path.exists("site/pages_urls.txt"):
-    urls += [B + u for u in open("site/pages_urls.txt").read().split()]
+    urls += [(B + u, today) for u in open("site/pages_urls.txt").read().split()]
+MONTHS_ = ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
 for L in LANGS:
     p = f"/{L}" if L else ""
-    if L: urls.append(f"{B}{p}/")
-    urls.append(f"{B}{p}/beaches/")
-    urls.append(f"{B}{p}/flight-delay/")
-    urls.append(f"{B}{p}/reports/cleanest-beaches/")
-    for m in ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]:
-        urls.append(f"{B}{p}/sea-temperature/{m}/")
-    urls.append(f"{B}{p}/destination/")
-    for d_ in DEST_SLUGS: urls.append(f"{B}{p}/destination/{d_}/")
-    for c in countries: urls.append(f"{B}{p}/beaches/{c[1]}/")
-    for (cc, sl) in sorted(towns):
-        urls.append(f"{B}{p}/beaches/{slug(CNAME[cc])}/{sl}/")
-    for s in S:
-        urls.append(f"{B}{p}/beach/{s[0]}/{slug(s[1] + ' ' + s[2])}")
+    if L: urls.append((f"{B}{p}/", today))
+    urls.append((f"{B}{p}/beaches/", today))
+    urls.append((f"{B}{p}/flight-delay/", None))
+    urls.append((f"{B}{p}/reports/cleanest-beaches/", REPORT_DATE))
+    for m in MONTHS_: urls.append((f"{B}{p}/sea-temperature/{m}/", CLIM_DATE))
+    urls.append((f"{B}{p}/destination/", today))
+    for d_ in DEST_SLUGS: urls.append((f"{B}{p}/destination/{d_}/", today))
+    for c in countries: urls.append((f"{B}{p}/beaches/{c[1]}/", today))
+gate = {"beach": [0, 0], "town": [0, 0]}
+for (cc, sl), t in sorted(towns.items()):
+    ix = [idx_of[x[0]] for x in t["ids"] if x[0] in idx_of]
+    ok = [i for i in ix if beach_ok(i)]
+    for L in LANGS:
+        gate["town"][1] += 1
+        if len(ix) >= 3 and ok and L in langs_for(cc):
+            gate["town"][0] += 1
+            urls.append((f"{B}{'/' + L if L else ''}/beaches/{slug(CNAME[cc])}/{sl}/", max(beach_mod(i) for i in ok)))
+for i, s in enumerate(S):
+    for L in LANGS:
+        gate["beach"][1] += 1
+        if beach_ok(i) and L in langs_for(s[10]):
+            gate["beach"][0] += 1
+            urls.append((f"{B}{'/' + L if L else ''}/beach/{s[0]}/{slug(s[1] + ' ' + s[2])}", beach_mod(i)))
+print("portti: rannat", gate["beach"][0], "/", gate["beach"][1], "· kaupungit", gate["town"][0], "/", gate["town"][1], "· sivukartta", len(urls))
+json.dump({"date": today, "urls": len(urls), "beach": gate["beach"], "town": gate["town"]}, open("site/data/sitemap_stats.json", "w"))
 for old in [x for x in os.listdir("site") if x.startswith("sitemap")]: os.remove("site/" + old)
 N = 45000; parts = [urls[i:i + N] for i in range(0, len(urls), N)]
 for n, part in enumerate(parts, 1):
     with open(f"site/sitemap-{n}.xml", "w") as fh:
         fh.write('<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
-        fh.write("".join(f"<url><loc>{u}</loc><lastmod>{today}</lastmod></url>\n" for u in part))
+        fh.write("".join(f"<url><loc>{u}</loc>" + (f"<lastmod>{m}</lastmod>" if m else "") + "</url>\n" for u, m in part))
         fh.write("</urlset>\n")
 with open("site/sitemap.xml", "w") as fh:
     fh.write('<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n')
-    fh.write("".join(f"<sitemap><loc>{B}/sitemap-{n}.xml</loc><lastmod>{today}</lastmod></sitemap>\n" for n in range(1, len(parts) + 1)))
+    fh.write("".join(f"<sitemap><loc>{B}/sitemap-{n}.xml</loc><lastmod>{max((m for _, m in part if m), default=today)}</lastmod></sitemap>\n" for n, part in enumerate(parts, 1)))
     fh.write("</sitemapindex>\n")
 print(len(shards), "aluetta,", len(S), "rantaa,", len(towns), "paikkakuntaa,", len(countries), "maata,", len(urls), "URLia,", len(parts), "sitemap-osaa")
