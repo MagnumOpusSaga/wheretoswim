@@ -1,0 +1,9 @@
+# Cloudflare Pages -asetukset (wrangler pages deploy dist). D1 = /go/-klikkilaskuri (clicks: day, partner, subid, n).
+name = "wheretoswim"
+pages_build_output_dir = "dist"
+compatibility_date = "2025-09-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wheretoswim"
+database_id = "75026493-7c3c-4ac6-83f2-e53314158d0b"

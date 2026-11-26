@@ -53,7 +53,7 @@ def verdict(t, lang):
     return (fi if lang == "fi" else en)[i]
 def beach_url(s): return f"/beach/{urllib.parse.quote(s[0])}/{slug(s[1] + ' ' + s[2])}"
 def flights_url(dest_en, iata, lang):
-    if AFF["flights"]: return AFF["flights"].format(iata=iata)
+    if AFF["flights"]: return "/go/?u=" + urllib.parse.quote(AFF["flights"].format(iata=iata), safe="")
     q = f"Flights from HEL to {iata}" if lang == "fi" else f"Flights to {iata}"
     return "https://www.google.com/travel/flights?q=" + urllib.parse.quote(q)
 def hotels_url(place):
@@ -81,9 +81,10 @@ td a{color:var(--ink);font-weight:650}.t{font-weight:780;white-space:nowrap}.dot
 .cities{columns:3 170px;gap:16px;background:#fff;border-radius:12px;padding:12px 16px}.cities a{display:block;color:var(--ink);padding:3px 0;text-decoration:none}.cities a:hover{color:var(--accent)}
 footer{max-width:820px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}footer a{color:var(--muted)}"""
 
-def page(path, lang, ttl, desc, body, alt=None, ld=None, canonical=None):
-    """canonical: toisen sivuston osoite (esim. Latutilanne). Silloin sivu ei mene sitemapiin eikä sillä ole hreflangeja."""
-    if canonical: alt = None
+def page(path, lang, ttl, desc, body, alt=None, ld=None, canonical=None, noindex=False):
+    """canonical: toisen sivuston osoite (esim. Latutilanne). Silloin sivu ei mene sitemapiin eikä sillä ole hreflangeja.
+    noindex: sivu jää käyttäjille, mutta ei hakukoneille (ei canonicalia, ei hreflangia, ei sitemapiin)."""
+    if canonical or noindex: alt = None
     canon = canonical or f"{BASE}{path}"
     alt = alt or {}
     links = "".join(f'<link rel="alternate" hreflang="{k}" href="{BASE}{v}">' for k, v in alt.items())
@@ -96,7 +97,7 @@ def page(path, lang, ttl, desc, body, alt=None, ld=None, canonical=None):
     foot = ("Data: Euroopan ympäristökeskus EEA, Copernicus Marine Service, MET Norway (CC BY 4.0), Suomen ympäristökeskus Syke (CC BY 4.0), Lipas / Jyväskylän yliopisto (CC BY 4.0), GeoNames (CC BY 4.0)."
             if lang == "fi" else "Data: European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), GeoNames (CC BY 4.0).")
     doc = f"""<!DOCTYPE html><html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{e(ttl)}</title><meta name="description" content="{e(desc)}"><link rel="canonical" href="{canon}">{links}
+<title>{e(ttl)}</title><meta name="description" content="{e(desc)}">{'<meta name="robots" content="noindex,follow">' if noindex else f'<link rel="canonical" href="{canon}">'}{links}
 <meta property="og:type" content="website"><meta property="og:site_name" content="Where to Swim"><meta property="og:title" content="{e(ttl)}"><meta property="og:description" content="{e(desc)}">
 <meta property="og:url" content="{canon}"><meta property="og:image" content="{BASE}/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0b6fa4">
@@ -104,11 +105,26 @@ def page(path, lang, ttl, desc, body, alt=None, ld=None, canonical=None):
 <body><header><div><a href="{'/fi/lammin-meri-nyt/' if lang == 'fi' else '/'}">🏊 Where to Swim</a><nav>{nav}{other}</nav></div></header><main>{body}</main>
 <footer>{foot} · <a href="/">wheretoswimtoday.com</a></footer></body></html>"""
     p = OUT + path + "index.html"; os.makedirs(os.path.dirname(p), exist_ok=True); open(p, "w").write(doc)
-    if not canonical: URLS.append(path)
+    if not canonical and not noindex: URLS.append(path)
 URLS = []
 
 # ---------------------------------------------------------------- lomakohteet
 from dest import DEST
+
+# Latutilanteen indeksoitavat sivut (sen sivukartta = portin läpäisseet). Avantosivun canonical vain niihin;
+# muut avantosivut noindex (sama kysymys kuin Latutilanteessa, ei omaa erillistä dataa). Haku epäonnistuu → kaikki noindex.
+def latu_indexed():
+    import urllib.request
+    try:
+        x = urllib.request.urlopen(urllib.request.Request("https://latutilanne.com/sitemap.xml", headers={"User-Agent": "wheretoswim-build"}), timeout=30).read().decode()
+        locs = set(re.findall(r"<loc>([^<]+)</loc>", x))
+        print("Latutilanne: indeksoitavia", len(locs))
+        return locs
+    except Exception as ex:
+        print("Latutilanne-sivukarttaa ei saatu:", ex)
+        return set()
+LATU = latu_indexed()
+def latu_canon(u): return (u, False) if u in LATU else (None, True)
 dest = []
 for sl, en, fi, bb, iata, cen, cfi in DEST:
     idx = [i for i, s in enumerate(S) if s[3] in "CT" and bb[0] <= s[4] <= bb[2] and bb[1] <= s[5] <= bb[3] and T["sst"][i]]
@@ -220,7 +236,8 @@ for c, aa in by_city.items():
         {"@type": "ListItem", "position": k, "item": {"@type": "SportsActivityLocation", "name": a["n"], "address": {"@type": "PostalAddress", "streetAddress": a["addr"], "addressLocality": a["city"], "addressCountry": "FI"},
          "geo": {"@type": "GeoCoordinates", "latitude": a["la"], "longitude": a["lo"]}}} for k, a in enumerate(aa, 1)]}
     # suomenkieliset avantohaut ohjataan Latutilanteeseen (samat kuntaslugit)
-    page(f"/fi/avanto/{city_slug[c]}/", "fi", ttl, desc, body, None, ld, canonical=f"https://latutilanne.com/fi/{city_slug[c]}/avannot/")
+    cu, ni = latu_canon(f"https://latutilanne.com/fi/{city_slug[c]}/avannot/")
+    page(f"/fi/avanto/{city_slug[c]}/", "fi", ttl, desc, body, None, ld, canonical=cu, noindex=ni)
 # avantojen pääsivu
 cities = sorted(by_city, key=lambda c: c)
 top_c = sorted(by_city, key=lambda c: -len(by_city[c]))[:8]
@@ -231,7 +248,8 @@ body = (f"<p class='upd'>{upd['fi']}</p><h1>Avantouintipaikat Suomessa</h1><p cl
         "Jokaiselta paikalta löydät palvelut, sään ja lähimmän mitatun veden lämpötilan.</p>"
         "<h2>Valitse kunta</h2><div class='cities'>" + "".join(f"<a href='/fi/avanto/{city_slug[c]}/'>{e(c)} ({len(by_city[c])})</a>" for c in cities) + "</div>"
         "<div class='disc'>Talviuinti on omalla vastuulla. Älä ui yksin ja tarkista avannon kunto. Paikkatiedot: Lipas.fi (Jyväskylän yliopisto, CC BY 4.0).</div>")
-page("/fi/avanto/", "fi", ttl, desc, body, canonical="https://latutilanne.com/fi/avannot/")
+cu, ni = latu_canon("https://latutilanne.com/fi/avannot/")
+page("/fi/avanto/", "fi", ttl, desc, body, canonical=cu, noindex=ni)
 open("site/pages_urls.txt", "w").write("\n".join(URLS) + "\n")
 open(OUT + "/pages.css", "w").write(CSS)
 # kompakti avantolista karttasovelluksen "Avannot lähellä" -näkymään
@@ -239,6 +257,7 @@ av_rows = []
 for a in places:
     w, src = water(a)
     av_rows.append([a["id"], a["n"], a["city"], city_slug[a["city"] or "Muu"], a["la"], a["lo"], 1 if a["sauna"] else 0, None if w is None else round(w, 1)])
+print("avantosivut: canonical Latutilanteeseen", sum(1 for c in cities if f"https://latutilanne.com/fi/{city_slug[c]}/avannot/" in LATU), "/", len(cities))
 json.dump(av_rows, open("site/data/avanto.json", "w"), ensure_ascii=False, separators=(",", ":"))
 print(len(URLS), "sivua;", len(dest), "kohdetta; lämpimin:", dest[0]["en"], round(dest[0]["t"], 1), "; Euroopan lämpimin:",
       [d["en"] for d in dest if "Caribbean" not in d["cen"] and "Indian" not in d["cen"]][0])

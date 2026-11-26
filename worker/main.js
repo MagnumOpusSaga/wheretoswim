@@ -47,7 +47,9 @@ const cname = (cc, l) => { try { DN[l] ??= new Intl.DisplayNames([LOC[l]], { typ
 const cnameBare = (cc, l) => cname(cc, l).replace(/^the /, "");
 const dayFmt = (iso, l) => new Date(iso + "T12:00:00Z").toLocaleDateString(LOC[l], { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
 // kumppanilinkki: aina merkintä + rel="sponsored nofollow"
-const affA = (href, text, l, cls = "") => `<a${cls ? ` class="${cls}"` : ""} href="${esc(href)}" rel="sponsored nofollow noopener" target="_blank">${text}</a> <small class="aff">${BOX[l].aff}</small>`;
+// /go/-laskuri: kumppanilinkki kulkee oman reitin kautta, joka laskee klikin (päivä, kumppani, SubID) D1:een ilman evästeitä ja IP:tä
+const goU = h => h.startsWith("https://tp.media/") ? "/go/?u=" + encodeURIComponent(h) : h;
+const affA = (href, text, l, cls = "") => `<a${cls ? ` class="${cls}"` : ""} href="${esc(goU(href))}" rel="sponsored nofollow noopener" target="_blank">${text}</a> <small class="aff">${BOX[l].aff}</small>`;
 const COL = l => l === "fr" ? " :" : ":";
 const longDate = (iso, l) => { const d = new Date(iso); return isNaN(d) ? iso : d.toLocaleDateString(LOC[l], { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Helsinki" }); };
 const todayIso = () => new Date().toISOString().slice(0, 10);
@@ -387,7 +389,7 @@ document.getElementById("cp").onclick=async()=>{ if(!sel) return; try{ await nav
 // Oma SubID jokaiselle sivutyypille, jotta Travelpayoutsin raportista näkee, mikä sivutyyppi tuo tuloja:
 // beach (rantasivu), month (kuukausisivu), destination (kohdesivu), flightdelay (lento-opas); staattiset Lämmin meri -sivut: warm.
 const sub = (u, id) => u.replace(/sub_id=[^&]*/, "sub_id=" + id);
-const affB = (href, text, l) => `<a class="ab" href="${esc(href)}" rel="sponsored nofollow noopener" target="_blank"><span>${text}</span><small class="aff">${BOX[l].aff}</small></a>`;
+const affB = (href, text, l) => `<a class="ab" href="${esc(goU(href))}" rel="sponsored nofollow noopener" target="_blank"><span>${text}</span><small class="aff">${BOX[l].aff}</small></a>`;
 function trip(l, b, g) {
   if (!b.ap || !b.ap.length || !g.a) return "";
   const x = BOX[l], U = UI[l], [c0, km0] = b.ap[0], a0 = g.a[c0] || [c0, ""], city = a0[1] || a0[0];
@@ -454,20 +456,22 @@ async function monthPage(env, url, l, mi) {
   if (url.pathname !== P(l) + path) return Response.redirect(HOST + P(l) + path, 301);
   const [R, IM] = await Promise.all([asset(env, o, "/data/regions.json"), asset(env, o, "/data/dest_images.json").catch(() => ({}))]);
   // kohteet (saaret ja rannikot) kuukauden 10 v keskiarvon mukaan; merentakaiset alueet eivät ole "Euroopan" vertailussa
-  const rows = R.r.filter(r => !r.ov && r.cl).map(r => [r.cc, r.s, r.nm[l] || r.nm.en, "", r.s, r.iata, r.cl[0], r.cl[1], r.cl[2]]).sort((a, b) => b[6][mi] - a[6][mi]).slice(0, 10);
+  const rows = R.r.filter(r => !r.ov && r.cl).map(r => [r.cc, r.s, r.nm[l] || r.nm.en, "", r.s, r.iata, r.cl[0], r.cl[1], r.cl[2], r]).sort((a, b) => b[6][mi] - a[6][mi]).slice(0, 10);
   const lab = r => r[2], subT = r => cnameBare(r[0], l), tC = v => `${nf(v, 1, l)} °C`;
   const mi_ = mIn(l, mi), mN = capF(mName(l, mi)), cur = new Date().getUTCMonth();
   const crumbs = [[s.home, P(l) + "/"], [A.crumb, `${P(l)}/sea-temperature/${MONTHS[cur]}/`], [mN, P(l) + path]];
   const town = r => `${P(l)}/destination/${r[1]}/`;
   let h = crumbHtml(crumbs) + `<h1>${esc(A.mH1(mi_))}</h1><p class="fresh"><span>${A.meta} · <a href="#method">${A.how}</a></span></p>`;
-  h += `<section class="hero"><div class="vt"><span>${A.short}</span></div><p style="font-size:17px;line-height:1.45;opacity:1;margin:6px 0 0">${A.ans(mi_, `${esc(lab(rows[0]))}, ${tC(rows[0][6][mi])}`, `${esc(lab(rows[1]))} (${tC(rows[1][6][mi])})`, `${esc(lab(rows[2]))} (${tC(rows[2][6][mi])})`)}</p></section>`;
+  h += `<section class="hero"><div class="vt"><span>${A.short}</span></div><p style="font-size:17px;line-height:1.45;opacity:1;margin:6px 0 0">${A.ans(mi_, `${esc(lab(rows[0]))}, ${tC(rows[0][6][mi])}`, `${esc(lab(rows[1]))} (${tC(rows[1][6][mi])})`, `${esc(lab(rows[2]))} (${tC(rows[2][6][mi])})`)} ${esc(A.w20(mi_, rows.filter(r => r[6][mi] >= 20).length))}</p></section>`;
   const order = [...Array(12).keys()].map(k => (mi + 10 + k) % 12);   // valittu kuukausi näkyviin heti alussa
   h += `<nav class="mchips">${order.map(i => `<a href="${P(l)}/sea-temperature/${MONTHS[i]}/"${i === mi ? ` class="on" aria-current="page"` : ""}>${esc(capF(mName(l, i, "short")))}</a>`).join("")}</nav>`;
   h += `<h2 style="margin:0">${A.rankH}</h2><p class="muted" style="margin:2px 0 8px;font-size:12.5px">${capF(A.avgL)} (${A.rangeT}). ${A.rankNote}</p>`;
   h += `<div class="rk">${rows.map((r, k) => { const v = r[6][mi];
-    const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(sub(AFF.flights, "month").replace("{IATA}", r[5]))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
+    const fl = k < 3 && AFF.flights && r[5] ? `<a class="ab" href="${esc(goU(sub(AFF.flights, "month").replace("{IATA}", r[5])))}" rel="sponsored nofollow noopener" target="_blank"><span>${esc(A.flights(`${lab(r)} (${r[5]})`))}</span><small class="aff">${BOX[l].aff}</small></a>` : "";
     const I = k < 3 && IM[r[1]];
-    return `<div class="it${k === 0 ? " top" : ""}">${I ? `<img class="img" onerror="this.remove()" src="${esc(imgSmall(I.u, 960))}" alt="${esc(lab(r))}" loading="${k ? "lazy" : "eager"}" width="960" height="120">` : ""}<a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(subT(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
+    return `<div class="it${k === 0 ? " top" : ""}">${I ? `<img class="img" onerror="this.remove()" src="${esc(imgSmall(I.u, 960))}" alt="${esc(lab(r))}" loading="${k ? "lazy" : "eager"}" width="960" height="120">` : ""}<a class="hd" href="${town(r)}"><span class="n">${k + 1}</span><span class="nm"><b>${esc(lab(r))}</b><span>${esc(subT(r))}</span></span><span class="tv"><b>${nf(v, 1, l)}°</b><span title="${A.rangeT}">${nf(r[7][mi], 1, l)}–${nf(r[8][mi], 1, l)}</span></span></a><div class="tr"><i style="width:${Math.max(6, Math.min(100, Math.round((v - 8) / 20 * 100)))}%;background:${tempColor(v)}"></i></div><p class="muted" style="margin:0;font-size:12.5px">${cap(s.verdict[vIdx(v)])} · ${(() => { const d = v - r[6][(mi + 11) % 12]; return esc(A.vsPrev(`${d >= 0 ? "+" : "−"}${nf(Math.abs(d), 1, l)} °C`)); })()} · ${qi("E")}${esc(A.qual(r[9].e5, r[9].n))}${mi === cur && regT(R, r[9]) != null ? ` · <b style="color:var(--ink)">${A.todayL} ${nf(regT(R, r[9]), 1, l)} °C</b>` : ""}</p>${fl}${k < 3 ? `<a class="more" href="${town(r)}">${esc(DS[l].inDest(r[2]))}</a>` : ""}</div>`; }).join("")}</div>`;
+  const ov = R.r.filter(r => r.ov && r.cl).sort((a, b) => b.cl[0][mi] - a.cl[0][mi]);
+  if (ov.length) h += `<h2 style="font-size:16px;margin-top:4px">${A.ovH}</h2><p class="muted" style="margin:0 0 8px;font-size:12.5px">${A.ovNote}</p><ul class="near" style="margin-bottom:16px">${ov.map(r => `<li><a href="${P(l)}/destination/${r.s}/"><span>${esc(r.nm[l] || r.nm.en)}</span><span><span class="dot" style="background:${tempColor(r.cl[0][mi])}"></span>${nf(r.cl[0][mi], 1, l)} °C</span></a></li>`).join("")}</ul>`;
   h += scaleHtml(l) + `<div style="height:16px"></div>`;
   h += `<a class="todayb" href="${P(l)}/"><span><b>${A.todayH}</b><span>${A.todayS}</span></span><em>${A.mapL}</em></a>`;
   h += `<section class="meth" id="method"><b>${A.how}</b><p>${A.method(mi_)}</p><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section>`;
@@ -475,7 +479,8 @@ async function monthPage(env, url, l, mi) {
   h += credits(rows.slice(0, 3).filter(r => IM[r[1]]).map(r => [lab(r), IM[r[1]]]), l);
   h += `<p class="muted" style="font-size:12px">${A.disc}</p>`;
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "Article", headline: A.mH1(mi_), inLanguage: l, url: HOST + P(l) + path,
-    isBasedOn: "https://marine.copernicus.eu/", publisher: { "@type": "Organization", name: SITE, url: HOST } });
+    isBasedOn: "https://marine.copernicus.eu/", publisher: { "@type": "Organization", name: SITE, url: HOST } })
+    + ld({ "@context": "https://schema.org", "@type": "ItemList", itemListElement: rows.map((r, k) => ({ "@type": "ListItem", position: k + 1, name: lab(r), url: HOST + town(r) })) });
   return page(l, { title: A.mTitle(mi_) + " | " + SITE, desc: A.mDesc(mi_, lab(rows[0]), tC(rows[0][6][mi])), path, head, body: h });
 }
 
@@ -578,6 +583,17 @@ async function reportPage(env, url, l) {
 const LOCAL = { FI: ["fi"], DE: ["de"], AT: ["de"], LU: ["fr", "de"], FR: ["fr"], ES: ["es"], IT: ["it"], NL: ["nl"], BE: ["nl", "fr"], CH: ["de", "fr", "it"] };
 const langsFor = cc => ["en", ...(LOCAL[cc] || [])];
 const beachOk = b => !!b && "EGSP".includes((b.h || "-")[0]) && !!(b.sst || b.lake);
+const GO_P = { "4114": "flights", "4845": "car", "4129": "claim" };
+function goRedirect(request, env, ctx, url) {
+  let t;
+  try { t = new URL(url.searchParams.get("u") || ""); } catch (e) { return Response.redirect(HOST + "/", 302); }
+  if (t.protocol !== "https:" || t.hostname !== "tp.media") return Response.redirect(HOST + "/", 302);
+  const partner = GO_P[t.searchParams.get("p")] || "other", subid = (t.searchParams.get("sub_id") || "-").replace(/[^a-z0-9_-]/gi, "").slice(0, 24);
+  const ua = request.headers.get("user-agent") || "";
+  if (env.DB && !/bot|crawl|spider|slurp|preview|headless|lighthouse/i.test(ua))
+    ctx.waitUntil(env.DB.prepare("INSERT INTO clicks(day, partner, subid, n) VALUES (?1, ?2, ?3, 1) ON CONFLICT(day, partner, subid) DO UPDATE SET n = n + 1").bind(new Date().toISOString().slice(0, 10), partner, subid).run().catch(() => {}));
+  return new Response(null, { status: 302, headers: { location: t.toString(), "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" } });
+}
 const DYN = /^\/(beach|beaches|embed|flight-delay|privacy|sea-temperature|reports|destination|kohde)(\/|$)/;
 export default {
   async fetch(request, env, ctx) {
@@ -587,6 +603,7 @@ export default {
     if (lm) { l = lm[1]; path = lm[2] || "/"; }
     if (lm && !lm[2]) return Response.redirect(HOST + P(l) + "/", 301);
     if (lm && path === "/" && request.method === "GET") { try { return await mapPage(env, url, l); } catch (e) { return env.ASSETS.fetch(new Request(url.origin + "/")); } }
+    if (path === "/go/" || path === "/go") return goRedirect(request, env, ctx, url);
     if (!DYN.test(path) || request.method !== "GET") return env.ASSETS.fetch(request);
     if (url.hostname === "www.wheretoswimtoday.com") return Response.redirect(HOST + url.pathname + url.search, 301);
     const cache = caches.default, key = new Request(url.toString());

@@ -13,6 +13,7 @@ const cap = s => s[0].toUpperCase() + s.slice(1);
 
 export const ART = {
   en: {
+    w20: (mi, n) => n ? `${cap(mi)}, ${n} of these destinations have water at 20 °C or warmer.` : `${cap(mi)}, the water is below 20 °C in all of these destinations.`, vsPrev: x => `${x} vs previous month`, todayL: "today", ovH: "Further away: EU outermost regions", ovNote: "French overseas regions in the Caribbean and the Indian Ocean are part of the EU.", qual: (a, b) => `${a}/${b} beaches excellent`,
     hub: "Sea temperature by month", crumb: "Sea temperature",
     mTitle: mi => `Where is the sea warm ${mi}? Warmest water in Europe`, mH1: mi => `Where is the sea warm ${mi}?`,
     mDesc: (mi, n1, t1) => `The warmest sea in Europe ${mi} is in ${n1}, about ${t1} on average. Water temperature for popular beach destinations from 10 years of Copernicus data.`,
@@ -43,6 +44,7 @@ export const ART = {
     clBest: (w, tw, c, tc) => `Warmest ${w} (about ${tw}) and coldest ${c} (about ${tc}).`,
   },
   fi: {
+    w20: (mi, n) => n ? `${cap(mi)} vesi on vähintään 20 °C ${n} kohteessa näistä.` : `${cap(mi)} vesi on kaikissa näissä kohteissa alle 20 °C.`, vsPrev: x => `${x} edelliseen kuukauteen`, todayL: "tänään", ovH: "Kauempana: EU:n merentakaiset alueet", ovNote: "Ranskan merentakaiset alueet Karibialla ja Intian valtamerellä kuuluvat EU:hun.", qual: (a, b) => `${a}/${b} rantaa erinomaisia`,
     hub: "Meriveden lämpö kuukausittain", crumb: "Meriveden lämpö",
     mTitle: mi => `Missä meri on lämmin ${mi}? Euroopan lämpimin vesi`, mH1: mi => `Missä meri on lämmin ${mi}?`,
     mDesc: (mi, n1, t1) => `Euroopan lämpimin meri ${mi} on kohteessa ${n1}, keskimäärin noin ${t1}. Suosittujen rantakohteiden veden lämpö 10 vuoden Copernicus-datasta.`,
@@ -73,6 +75,7 @@ export const ART = {
     clBest: (w, tw, c, tc) => `Lämpimintä ${w} (noin ${tw}) ja kylmintä ${c} (noin ${tc}).`,
   },
   de: {
+    w20: (mi, n) => n ? `${cap(mi)} hat das Wasser in ${n} dieser Reiseziele mindestens 20 °C.` : `${cap(mi)} liegt das Wasser in allen diesen Reisezielen unter 20 °C.`, vsPrev: x => `${x} zum Vormonat`, todayL: "heute", ovH: "Weiter weg: EU-Gebiete in Übersee", ovNote: "Französische Überseegebiete in der Karibik und im Indischen Ozean gehören zur EU.", qual: (a, b) => `${a}/${b} Strände ausgezeichnet`,
     hub: "Wassertemperatur nach Monat", crumb: "Wassertemperatur",
     mTitle: mi => `Wo ist das Meer ${mi} warm? Das wärmste Wasser Europas`, mH1: mi => `Wo ist das Meer ${mi} warm?`,
     mDesc: (mi, n1, t1) => `Das wärmste Meer Europas ${mi} gibt es in ${n1}, im Schnitt etwa ${t1}. Wassertemperaturen beliebter Strandziele aus 10 Jahren Copernicus-Daten.`,
@@ -103,6 +106,7 @@ export const ART = {
     clBest: (w, tw, c, tc) => `Am wärmsten ${w} (etwa ${tw}), am kältesten ${c} (etwa ${tc}).`,
   },
   fr: {
+    w20: (mi, n) => n ? `${cap(mi)}, l'eau atteint au moins 20 °C dans ${n} de ces destinations.` : `${cap(mi)}, l'eau reste sous 20 °C dans toutes ces destinations.`, vsPrev: x => `${x} par rapport au mois précédent`, todayL: "aujourd'hui", ovH: "Plus loin : les régions ultrapériphériques de l'UE", ovNote: "Les régions françaises d'outre-mer des Caraïbes et de l'océan Indien font partie de l'UE.", qual: (a, b) => `${a}/${b} plages excellentes`,
     hub: "Température de la mer par mois", crumb: "Température de la mer",
     mTitle: mi => `Où la mer est-elle chaude ${mi} ? L'eau la plus chaude d'Europe`, mH1: mi => `Où la mer est-elle chaude ${mi} ?`,
     mDesc: (mi, n1, t1) => `La mer la plus chaude d'Europe ${mi} se trouve à ${n1}, environ ${t1} en moyenne. Température de l'eau des destinations balnéaires populaires d'après 10 ans de données Copernicus.`,
@@ -133,6 +137,7 @@ export const ART = {
     clBest: (w, tw, c, tc) => `La plus chaude ${w} (environ ${tw}), la plus froide ${c} (environ ${tc}).`,
   },
   es: {
+    w20: (mi, n) => n ? `${cap(mi)}, el agua llega al menos a 20 °C en ${n} de estos destinos.` : `${cap(mi)}, el agua está por debajo de 20 °C en todos estos destinos.`, vsPrev: x => `${x} respecto al mes anterior`, todayL: "hoy", ovH: "Más lejos: regiones ultraperiféricas de la UE", ovNote: "Las regiones francesas de ultramar en el Caribe y el océano Índico forman parte de la UE.", qual: (a, b) => `${a}/${b} playas excelentes`,
     hub: "Temperatura del mar por meses", crumb: "Temperatura del mar",
     mTitle: mi => `¿Dónde está caliente el mar ${mi}? El agua más cálida de Europa`, mH1: mi => `¿Dónde está caliente el mar ${mi}?`,
     mDesc: (mi, n1, t1) => `El mar más cálido de Europa ${mi} está en ${n1}, con unos ${t1} de media. Temperatura del agua de destinos de playa populares a partir de 10 años de datos de Copernicus.`,
@@ -163,6 +168,7 @@ export const ART = {
     clBest: (w, tw, c, tc) => `Más cálida ${w} (unos ${tw}) y más fría ${c} (unos ${tc}).`,
   },
   it: {
+    w20: (mi, n) => n ? `${cap(mi)} l'acqua raggiunge almeno 20 °C in ${n} di queste mete.` : `${cap(mi)} l'acqua resta sotto i 20 °C in tutte queste mete.`, vsPrev: x => `${x} rispetto al mese precedente`, todayL: "oggi", ovH: "Più lontano: regioni ultraperiferiche dell'UE", ovNote: "Le regioni francesi d'oltremare nei Caraibi e nell'Oceano Indiano fanno parte dell'UE.", qual: (a, b) => `${a}/${b} spiagge eccellenti`,
     hub: "Temperatura del mare mese per mese", crumb: "Temperatura del mare",
     mTitle: mi => `Dov'è caldo il mare ${mi}? L'acqua più calda d'Europa`, mH1: mi => `Dov'è caldo il mare ${mi}?`,
     mDesc: (mi, n1, t1) => `Il mare più caldo d'Europa ${mi} è a ${n1}, in media circa ${t1}. Temperatura dell'acqua delle mete balneari più popolari da 10 anni di dati Copernicus.`,
@@ -193,6 +199,7 @@ export const ART = {
     clBest: (w, tw, c, tc) => `Più calda ${w} (circa ${tw}), più fredda ${c} (circa ${tc}).`,
   },
   nl: {
+    w20: (mi, n) => n ? `${cap(mi)} is het water in ${n} van deze bestemmingen minstens 20 °C.` : `${cap(mi)} blijft het water op al deze bestemmingen onder 20 °C.`, vsPrev: x => `${x} t.o.v. vorige maand`, todayL: "vandaag", ovH: "Verder weg: ultraperifere gebieden van de EU", ovNote: "De Franse overzeese gebieden in het Caribisch gebied en de Indische Oceaan horen bij de EU.", qual: (a, b) => `${a}/${b} stranden uitstekend`,
     hub: "Zeewatertemperatuur per maand", crumb: "Zeewatertemperatuur",
     mTitle: mi => `Waar is de zee warm ${mi}? Het warmste water van Europa`, mH1: mi => `Waar is de zee warm ${mi}?`,
     mDesc: (mi, n1, t1) => `De warmste zee van Europa ${mi} vind je in ${n1}, gemiddeld ongeveer ${t1}. Watertemperatuur van populaire strandbestemmingen op basis van 10 jaar Copernicus-gegevens.`,
