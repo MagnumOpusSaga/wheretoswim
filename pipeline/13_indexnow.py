@@ -1,7 +1,8 @@
 """IndexNow (N20): ilmoittaa Bingille ja muille IndexNow-hakukoneille muuttuneet osoitteet.
   python pipeline/13_indexnow.py snapshot   ennen julkaisua: tallentaa nykyisen live-sivukartan (/tmp/old_sitemap.json)
   python pipeline/13_indexnow.py submit     julkaisun jälkeen: lähettää uudet osoitteet + muuttuneet kooste-/artikkelisivut
-INDEXNOW_ALL=1 lähettää koko sivukartan (kerran käsin, workflow_dispatch-valinta).
+INDEXNOW_ALL=1 lähettää koko sivukartan (kerran käsin, workflow_dispatch-valinta). Koko sivukartta lähetetty 27.11.2026 (28 112, 200).
+User-Agent pakollinen: Pythonin oletus-UA saa 403:n.
 Rantojen ja kaupunkien päivittäistä lämpötilamuutosta ei lähetetä joka päivä (vain uudet), ettei ilmoiteta 27 000 osoitetta päivittäin.
 Avain on julkinen tiedosto site/static/<avain>.txt (IndexNow-protokollan mukaan)."""
 import json, os, re, sys, urllib.request
@@ -39,7 +40,7 @@ ok = True
 for i in range(0, len(urls), 10000):
     body = json.dumps({"host": HOST, "key": KEY, "keyLocation": f"{BASE}/{KEY}.txt", "urlList": urls[i:i + 10000]}).encode()
     try:
-        r = urllib.request.urlopen(urllib.request.Request("https://api.indexnow.org/indexnow", data=body, headers={"Content-Type": "application/json; charset=utf-8"}), timeout=60)
+        r = urllib.request.urlopen(urllib.request.Request("https://api.indexnow.org/indexnow", data=body, headers={"Content-Type": "application/json; charset=utf-8", "User-Agent": "wheretoswim-build"}), timeout=60)
         print("  erä", i // 10000 + 1, "→", r.status)
     except Exception as ex:
         ok = False; print("  erä", i // 10000 + 1, "virhe:", ex)
