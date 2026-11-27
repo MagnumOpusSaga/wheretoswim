@@ -111,8 +111,9 @@ URLS = []
 # ---------------------------------------------------------------- lomakohteet
 from dest import DEST
 
-# Latutilanteen indeksoitavat sivut (sen sivukartta = portin läpäisseet). Avantosivun canonical vain niihin;
-# muut avantosivut noindex (sama kysymys kuin Latutilanteessa, ei omaa erillistä dataa). Haku epäonnistuu → kaikki noindex.
+# Latutilanteen indeksoitavat sivut (sen sivukartta = portin läpäisseet; paikkatasolla myös latutilanne.com/data/gate-avannot.json).
+# Avantosivun canonical vain niihin; muut ovat Where to Swimin omia sivuja (indeksiin vain, jos omaa lämpötiladataa).
+# Haku epäonnistuu → ei canonicaleja Latutilanteeseen.
 def latu_indexed():
     import urllib.request
     try:
@@ -236,7 +237,10 @@ for c, aa in by_city.items():
         {"@type": "ListItem", "position": k, "item": {"@type": "SportsActivityLocation", "name": a["n"], "address": {"@type": "PostalAddress", "streetAddress": a["addr"], "addressLocality": a["city"], "addressCountry": "FI"},
          "geo": {"@type": "GeoCoordinates", "latitude": a["la"], "longitude": a["lo"]}}} for k, a in enumerate(aa, 1)]}
     # suomenkieliset avantohaut ohjataan Latutilanteeseen (samat kuntaslugit)
+    # Branu 27.11.: canonical Latutilanteeseen vain, jos sen sivu on indeksoitava; muut Where to Swimin omia sivuja.
+    # Spämmisuoja: oma sivu indeksiin vain, jos ainakin yhdellä paikalla on oma veden lämpötila (meri tai järvimittaus).
     cu, ni = latu_canon(f"https://latutilanne.com/fi/{city_slug[c]}/avannot/")
+    if cu is None: ni = not ws
     page(f"/fi/avanto/{city_slug[c]}/", "fi", ttl, desc, body, None, ld, canonical=cu, noindex=ni)
 # avantojen pääsivu
 cities = sorted(by_city, key=lambda c: c)
@@ -248,8 +252,8 @@ body = (f"<p class='upd'>{upd['fi']}</p><h1>Avantouintipaikat Suomessa</h1><p cl
         "Jokaiselta paikalta löydät palvelut, sään ja lähimmän mitatun veden lämpötilan.</p>"
         "<h2>Valitse kunta</h2><div class='cities'>" + "".join(f"<a href='/fi/avanto/{city_slug[c]}/'>{e(c)} ({len(by_city[c])})</a>" for c in cities) + "</div>"
         "<div class='disc'>Talviuinti on omalla vastuulla. Älä ui yksin ja tarkista avannon kunto. Paikkatiedot: Lipas.fi (Jyväskylän yliopisto, CC BY 4.0).</div>")
-cu, ni = latu_canon("https://latutilanne.com/fi/avannot/")
-page("/fi/avanto/", "fi", ttl, desc, body, canonical=cu, noindex=ni)
+cu, _ = latu_canon("https://latutilanne.com/fi/avannot/")
+page("/fi/avanto/", "fi", ttl, desc, body, canonical=cu)
 open("site/pages_urls.txt", "w").write("\n".join(URLS) + "\n")
 open(OUT + "/pages.css", "w").write(CSS)
 # kompakti avantolista karttasovelluksen "Avannot lähellä" -näkymään
@@ -257,7 +261,7 @@ av_rows = []
 for a in places:
     w, src = water(a)
     av_rows.append([a["id"], a["n"], a["city"], city_slug[a["city"] or "Muu"], a["la"], a["lo"], 1 if a["sauna"] else 0, None if w is None else round(w, 1)])
-print("avantosivut: canonical Latutilanteeseen", sum(1 for c in cities if f"https://latutilanne.com/fi/{city_slug[c]}/avannot/" in LATU), "/", len(cities))
+print("avantosivut: canonical Latutilanteeseen", sum(1 for c in cities if f"https://latutilanne.com/fi/{city_slug[c]}/avannot/" in LATU), "/", len(cities), "; omia indeksiin", sum(1 for u in URLS if u.startswith("/fi/avanto/")))
 json.dump(av_rows, open("site/data/avanto.json", "w"), ensure_ascii=False, separators=(",", ":"))
 print(len(URLS), "sivua;", len(dest), "kohdetta; lämpimin:", dest[0]["en"], round(dest[0]["t"], 1), "; Euroopan lämpimin:",
       [d["en"] for d in dest if "Caribbean" not in d["cen"] and "Indian" not in d["cen"]][0])
