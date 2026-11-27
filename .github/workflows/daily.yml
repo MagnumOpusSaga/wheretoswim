@@ -9,6 +9,10 @@ on:
         description: "Julkaise, vaikka laatuportti hälyttää (HEALTH_FORCE)"
         type: boolean
         default: false
+      indexnow_all:
+        description: "Lähetä koko sivukartta IndexNow'hun (N20, kerran)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -67,7 +71,17 @@ jobs:
           HEALTH_FORCE: ${{ inputs.force && '1' || '0' }}
         run: python pipeline/12_health.py
 
+      - name: IndexNow snapshot (live sitemap before deploy)
+        continue-on-error: true
+        run: python pipeline/13_indexnow.py snapshot
+
       - name: Deploy to Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npx -y wrangler@4 pages deploy dist --project-name=wheretoswim --branch=main --commit-dirty=true
+
+      - name: IndexNow (Bing ym., N20)
+        continue-on-error: true
+        env:
+          INDEXNOW_ALL: ${{ inputs.indexnow_all && '1' || '0' }}
+        run: python pipeline/13_indexnow.py submit

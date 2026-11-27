@@ -135,7 +135,11 @@ small.aff{font-size:11px;font-weight:500;color:var(--muted);background:var(--chi
 footer{max-width:820px;margin:0 auto;padding:0 16px 30px;font-size:12.5px;color:var(--muted)}footer a{color:var(--muted)}footer .langs{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 8px}`;
 
 // hl = kielet, jotka ovat indeksissä (hreflang vain niihin); noindex-sivulla ei hreflangia eikä canonicalia
-function page(l, { title: ttl, desc, path, alt = true, hl = LANGS, head = "", body, status = 200, noindex = false }) {
+// AdSense (Branu 27.11.2026, claude/adsense-kaikille.md): vahvistusmeta kaikille sivuille; mainosskripti vain indeksoitaville sisältösivuille (ads: true), ei karttaan, upotukseen, 404:ään eikä tietosuojasivulle.
+const ADS_ID = "ca-pub-1421922359984193";
+const ADS_META = `<meta name="google-adsense-account" content="${ADS_ID}">`;
+const ADS_JS = `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADS_ID}" crossorigin="anonymous"></script>`;
+function page(l, { title: ttl, desc, path, alt = true, hl = LANGS, head = "", body, status = 200, noindex = false, ads = false }) {
   const s = STR[l], url = HOST + P(l) + path;
   const alts = alt && !noindex ? hl.map(x => `<link rel="alternate" hreflang="${x}" href="${HOST}${P(x)}${path}">`).join("") + (hl.includes("en") ? `<link rel="alternate" hreflang="x-default" href="${HOST}${path}">` : "") : "";
   const langs = alt ? `<div class="langs">${LANGS.map(x => x === l ? `<b>${STR[x].native}</b>` : `<a href="${P(x)}${path}" hreflang="${x}">${STR[x].native}</a>`).join("")}</div>` : "";
@@ -144,7 +148,7 @@ function page(l, { title: ttl, desc, path, alt = true, hl = LANGS, head = "", bo
 <meta property="og:type" content="website"><meta property="og:site_name" content="${SITE}"><meta property="og:title" content="${esc(ttl.replace(/ \| Where to Swim$/, ""))}">${desc ? `<meta property="og:description" content="${esc(desc)}">` : ""}
 <meta property="og:url" content="${url}"><meta property="og:image" content="${HOST}/og.png"><meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="/favicon.ico" sizes="48x48"><link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><meta name="theme-color" content="#0B63A8">
-${head}<style>${CSS}</style></head><body><header><div><a class="logo" href="/"><img src="/favicon.svg" alt="">${SITE}</a><nav><a href="${P(l)}/beaches/">${s.allCountries}</a><a href="${P(l)}/">${s.nav}</a></nav></div></header><main>${body}</main>
+${ADS_META}${ads && !noindex ? ADS_JS : ""}${head}<style>${CSS}</style></head><body><header><div><a class="logo" href="/"><img src="/favicon.svg" alt="">${SITE}</a><nav><a href="${P(l)}/beaches/">${s.allCountries}</a><a href="${P(l)}/">${s.nav}</a></nav></div></header><main>${body}</main>
 <footer>${langs}${s.dataL}${COL(l)} European Environment Agency, Copernicus Marine Service, MET Norway (CC BY 4.0), Finnish Environment Institute Syke (CC BY 4.0), data.gouv.fr (Licence Ouverte), GeoNames (CC BY 4.0). · <a href="${P(l)}/embed/">${s.embedLink}</a> · <a href="${P(l)}/flight-delay/">${BOX[l].guide.replace(/ ?→$/, "")}</a> · <a href="${P(l)}/reports/cleanest-beaches/">${ART[l].rShort}</a> · <a href="${P(l)}/sea-temperature/${MONTHS[new Date().getUTCMonth()]}/">${ART[l].hub}</a> · <a href="${P(l)}/privacy/">${PRIV[l].link}</a> · <a href="/">wheretoswimtoday.com</a></footer>
 </body></html>`, { status, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=1800" } });
 }
@@ -238,7 +242,7 @@ async function beach(env, url, l, id) {
   if (b.ev) h += `<h2>${s.evH}</h2><ul>${Object.entries(b.ev).map(([k, n]) => `<li>${esc(l === "fr" ? k : (EV[l] && EV[l][k]) || EV_EN[k] || k)}${n > 1 ? ` (${n}×)` : ""}</li>`).join("")}</ul>`;
   h += `<p><a href="${P(l)}/embed/?b=${encodeURIComponent(m.id)}">&lt;/&gt; ${s.embedLink}</a></p>`;
   h += `<div class="disc">${s.disc(esc(longDate(g.f, l)))}</div>` + shareJs(l);
-  return page(l, { title: s.beachTitle(name, town), desc, path, head, body: h, hl, noindex: !ok || !hl.includes(l) });
+  return page(l, { ads: true, title: s.beachTitle(name, town), desc, path, head, body: h, hl, noindex: !ok || !hl.includes(l) });
 }
 
 // ---------- kaupunkisivu ----------
@@ -279,7 +283,7 @@ async function town(env, url, l, csl, tsl) {
   h += `<p><a href="${P(l)}/beaches/${csl}/">${esc(s.allIn(cn))} →</a></p><div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>` + shareJs(l);
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "ItemList", name: s.townH1(t[1]), itemListElement: rows.slice(0, 50).map((r, i) => ({ "@type": "ListItem", position: i + 1, url: HOST + beachPath(l, r.id, r.raw, t[1]), name: r.name })) });
   const tok = rows.length >= 3 && rows.some(r => beachOk(r.b)), thl = langsFor(cc);
-  return page(l, { title: s.townTitle(t[1], n), desc, path, head, body: h, hl: thl, noindex: !tok || !thl.includes(l) });
+  return page(l, { ads: true, title: s.townTitle(t[1], n), desc, path, head, body: h, hl: thl, noindex: !tok || !thl.includes(l) });
 }
 
 // ---------- maasivu ----------
@@ -302,7 +306,7 @@ async function country(env, url, l, csl) {
   h += `<h2>${s.allPlacesH}</h2><ul class="az">${az.map(x => `<li><a href="${P(l)}/beaches/${csl}/${x[0]}/">${esc(x[1])}</a> <span>${x[4].length}</span></li>`).join("")}</ul>`;
   h += `<div class="disc">${s.disc(esc(longDate(TW.f, l)))}</div>`;
   const head = crumbLd(crumbs);
-  return page(l, { title: s.countryTitle(cn, c[2].toLocaleString(LOC[l])), desc: s.countryDesc(cn, c[2].toLocaleString(LOC[l])), path, head, body: h });
+  return page(l, { ads: true, title: s.countryTitle(cn, c[2].toLocaleString(LOC[l])), desc: s.countryDesc(cn, c[2].toLocaleString(LOC[l])), path, head, body: h });
 }
 
 // ---------- maaluettelo ----------
@@ -313,7 +317,7 @@ async function index(env, url, l) {
   const list = C.c.slice().sort((a, b) => coll.compare(cnameBare(a[0], l), cnameBare(b[0], l)));
   let h = crumbHtml([[s.home, P(l) + "/"], [s.allCountries, P(l) + path]]) + `<h1>${s.indexH1}</h1><p class="lead">${s.indexLead(total.toLocaleString(LOC[l]))}</p>`;
   h += `<ul class="near">${list.map(r => `<li><a href="${P(l)}/beaches/${r[1]}/"><span>${flag(r[0])} ${esc(cnameBare(r[0], l))}<span class="muted"> · ${s.beachesN(r[2])}</span></span><span>${r[4] ? `<span class="dot" style="background:${tempColor(r[4][di])}"></span>${TH(r[4][di], l)}` : ""}</span></a></li>`).join("")}</ul>`;
-  return page(l, { title: s.indexTitle, desc: s.indexLead(total.toLocaleString(LOC[l])), path, head: crumbLd([[s.home, P(l) + "/"], [s.allCountries, P(l) + path]]), body: h });
+  return page(l, { ads: true, title: s.indexTitle, desc: s.indexLead(total.toLocaleString(LOC[l])), path, head: crumbLd([[s.home, P(l) + "/"], [s.allCountries, P(l) + path]]), body: h });
 }
 
 // ---------- upotettava widget ----------
@@ -326,7 +330,7 @@ async function widget(env, url, l, id) {
   const wx = b.wx && g.w[b.wx] ? g.w[b.wx].filter(r => r[0] >= today) : null, w0 = wx && wx[0];
   const tv = t => unitF ? F(t) + "°F" : nf(t, 0, l) + "°C";
   const name = dn(m.name, twinIdx(idx)), href = HOST + beachPath(l, m.id, m.name, m.town), q = b.h[0];
-  const html = `<!DOCTYPE html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex"><title>${esc(name)}</title><style>
+  const html = `<!DOCTYPE html><html lang="${l}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">${ADS_META}<title>${esc(name)}</title><style>
 *{box-sizing:border-box}html,body{margin:0;height:100%}body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:#0F2533;background:#fff}
 a.w{display:flex;flex-direction:column;justify-content:space-between;height:100%;padding:12px 14px;border:1px solid #E6DCCB;border-radius:14px;text-decoration:none;color:inherit;background:linear-gradient(180deg,${tempColor(tNow)}1a,#fff 70%)}
 .n{font-weight:750;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.p{font-size:12.5px;color:#6A5A45;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -415,7 +419,7 @@ function guidePage(url, l) {
     + `<p><a href="${P(l)}/beaches/">${STR[l].allCountries} →</a></p>`;
   const head = ld({ "@context": "https://schema.org", "@type": "Article", headline: G.h1, description: G.desc, inLanguage: l, url: HOST + P(l) + path,
     publisher: { "@type": "Organization", name: SITE, url: HOST } }) + crumbLd([[STR[l].home, P(l) + "/"], [G.h1, P(l) + path]]);
-  return page(l, { title: G.title + " | " + SITE, desc: G.desc, path, head, body });
+  return page(l, { ads: true, title: G.title + " | " + SITE, desc: G.desc, path, head, body });
 }
 
 // ---------- tietosuojaseloste ----------
@@ -481,7 +485,7 @@ async function monthPage(env, url, l, mi) {
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "Article", headline: A.mH1(mi_), inLanguage: l, url: HOST + P(l) + path,
     isBasedOn: "https://marine.copernicus.eu/", publisher: { "@type": "Organization", name: SITE, url: HOST } })
     + ld({ "@context": "https://schema.org", "@type": "ItemList", itemListElement: rows.map((r, k) => ({ "@type": "ListItem", position: k + 1, name: lab(r), url: HOST + town(r) })) });
-  return page(l, { title: A.mTitle(mi_) + " | " + SITE, desc: A.mDesc(mi_, lab(rows[0]), tC(rows[0][6][mi])), path, head, body: h });
+  return page(l, { ads: true, title: A.mTitle(mi_) + " | " + SITE, desc: A.mDesc(mi_, lab(rows[0]), tC(rows[0][6][mi])), path, head, body: h });
 }
 
 
@@ -537,7 +541,7 @@ async function destPage(env, url, l, sl) {
   h += `<section class="meth"><b>${A.how}</b><p>${A.methodNote}</p><p style="color:var(--muted);margin:0">${A.sources}</p></section><p class="muted" style="font-size:12px">${A.disc}</p>` + shareJs(l);
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "TouristDestination", name: n, url: HOST + P(l) + path, containedInPlace: { "@type": "Country", name: cb } });
   const desc = t0 != null && cl ? D.dDesc(n, `${nf(t0, 0, l)} °C`, mIn(l, iw), `${nf(mx, 0, l)} °C`) : D.dLead(n, r.n, r.e5);
-  return page(l, { title: D.dTitle(n) + " | " + SITE, desc, path, head, body: h });
+  return page(l, { ads: true, title: D.dTitle(n) + " | " + SITE, desc, path, head, body: h });
 }
 async function destIndex(env, url, l) {
   const s = STR[l], D = DS[l], o = url.origin, path = "/destination/";
@@ -546,7 +550,7 @@ async function destIndex(env, url, l) {
   const rows = R.r.slice().sort((a, b) => (regT(R, b) ?? -99) - (regT(R, a) ?? -99));
   const crumbs = [[s.home, P(l) + "/"], [D.allH, P(l) + path]];
   let h = crumbHtml(crumbs) + `<h1>${esc(D.allTitle)}</h1><p class="lead">${esc(D.allLead(rows.length))}</p><div class="dgrid">${rows.map(x => { const t = regT(R, x), I = IM[x.s]; return `<a href="${P(l)}/destination/${x.s}/">${I ? `<img onerror="this.style.visibility='hidden'" src="${esc(imgSmall(I.u, 500))}" alt="" loading="lazy" width="500" height="104">` : `<i class="ph"></i>`}<span>${esc(x.nm[l] || x.nm.en)}<em style="font-style:normal;white-space:nowrap">${t != null ? `${nf(t, 0, l)}°` : ""}</em></span><small>${esc(cnameBare(x.cc, l))}</small></a>`; }).join("")}</div>${credits(rows.filter(x => IM[x.s]).map(x => [x.nm[l] || x.nm.en, IM[x.s]]), l)}`;
-  return page(l, { title: D.allTitle + " | " + SITE, desc: D.allLead(rows.length), path, head: crumbLd(crumbs), body: h });
+  return page(l, { ads: true, title: D.allTitle + " | " + SITE, desc: D.allLead(rows.length), path, head: crumbLd(crumbs), body: h });
 }
 
 // ---------- vuosiraportti: Euroopan puhtaimmat rannat ----------
@@ -574,7 +578,7 @@ async function reportPage(env, url, l) {
   const head = crumbLd(crumbs) + ld({ "@context": "https://schema.org", "@type": "Dataset", name: A.rTitle, description: A.rDesc(pct(p5, l), n5, n), inLanguage: l, url: HOST + P(l) + path,
     isBasedOn: "https://www.eea.europa.eu/en/topics/in-depth/bathing-water", creator: { "@type": "Organization", name: SITE, url: HOST }, license: "https://creativecommons.org/licenses/by/4.0/",
     temporalCoverage: "2021/2025", distribution: { "@type": "DataDownload", encodingFormat: "text/csv", contentUrl: HOST + csv } });
-  return page(l, { title: A.rTitle + " | " + SITE, desc: A.rDesc(pct(p5, l), n5.toLocaleString(loc), n.toLocaleString(loc)), path, head, body: h });
+  return page(l, { ads: true, title: A.rTitle + " | " + SITE, desc: A.rDesc(pct(p5, l), n5.toLocaleString(loc), n.toLocaleString(loc)), path, head, body: h });
 }
 
 // ---------- reititys ----------
