@@ -3,7 +3,12 @@ name: Daily update
 on:
   schedule:
     - cron: "17 3 * * *"   # joka aamu ~05–06 Suomen aikaa
-  workflow_dispatch: {}     # käsin: Actions → Daily update → Run workflow
+  workflow_dispatch:        # käsin: Actions → Daily update → Run workflow
+    inputs:
+      force:
+        description: "Julkaise, vaikka laatuportti hälyttää (HEALTH_FORCE)"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -56,6 +61,11 @@ jobs:
           python pipeline/08_pages.py
           python pipeline/07_beach_shards.py
           bash pipeline/09_dist.sh
+
+      - name: Quality gate (data source alarm, N29)
+        env:
+          HEALTH_FORCE: ${{ inputs.force && '1' || '0' }}
+        run: python pipeline/12_health.py
 
       - name: Deploy to Cloudflare Pages
         env:
