@@ -593,9 +593,13 @@ function goRedirect(request, env, ctx, url) {
   try { t = new URL(url.searchParams.get("u") || ""); } catch (e) { return Response.redirect(HOST + "/", 302); }
   if (t.protocol !== "https:" || t.hostname !== "tp.media") return Response.redirect(HOST + "/", 302);
   const partner = GO_P[t.searchParams.get("p")] || "other", subid = (t.searchParams.get("sub_id") || "-").replace(/[^a-z0-9_-]/gi, "").slice(0, 24);
-  const ua = request.headers.get("user-agent") || "";
-  if (env.DB && !/bot|crawl|spider|slurp|preview|headless|lighthouse/i.test(ua))
-    ctx.waitUntil(env.DB.prepare("INSERT INTO clicks(day, partner, subid, n) VALUES (?1, ?2, ?3, 1) ON CONFLICT(day, partner, subid) DO UPDATE SET n = n + 1").bind(new Date().toISOString().slice(0, 10), partner, subid).run().catch(() => {}));
+  const h = request.headers, ua = h.get("user-agent") || "", ref = h.get("referer") || "";
+  // Oikea klikki = selain siirtyy omalta sivultamme (Sec-Fetch tai Referer). Muut (botit, linkkiesikatselut) lasketaan erikseen "bot_"-etuliitteellä.
+  const human = !/bot|crawl|spider|slurp|preview|headless|lighthouse/i.test(ua)
+    && (h.get("sec-fetch-site") === "same-origin" || ref.startsWith(HOST + "/"))
+    && (h.get("sec-fetch-mode") || "navigate") === "navigate";
+  if (env.DB)
+    ctx.waitUntil(env.DB.prepare("INSERT INTO clicks(day, partner, subid, n) VALUES (?1, ?2, ?3, 1) ON CONFLICT(day, partner, subid) DO UPDATE SET n = n + 1").bind(new Date().toISOString().slice(0, 10), (human ? "" : "bot_") + partner, subid).run().catch(() => {}));
   return new Response(null, { status: 302, headers: { location: t.toString(), "cache-control": "no-store", "x-robots-tag": "noindex, nofollow" } });
 }
 const DYN = /^\/(beach|beaches|embed|flight-delay|privacy|sea-temperature|reports|destination|kohde)(\/|$)/;
